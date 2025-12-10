@@ -29,9 +29,9 @@ export default function Messages() {
   }
 
   return (
-    <div className="flex h-full bg-white flex-col md:flex-row">
+    <div className="flex h-full lg:bg-black/20 flex-col md:flex-row">
       {/* Chat List - Always visible on lg, hidden on mobile when chat selected */}
-      <div className={`bg-white border-r border-slate-200 flex flex-col ${selectedChat ? 'hidden md:flex' : 'w-full md:w-80'} lg:w-80`}>
+      <div className={`bg-white  border-r lg:mx-3 lg:my-3 rounded-lg lg:py-2 border-slate-200 flex flex-col ${selectedChat ? 'hidden md:flex' : 'w-full md:w-80'} lg:w-80`}>
 
         <div className="p-4 border-b border-slate-200">
           <div className="relative">
@@ -86,7 +86,7 @@ export default function Messages() {
       </div>
 
       {/* Chat History - On lg view, both list and history visible side by side */}
-      <div className={`flex-1 flex flex-col bg-white ${selectedChat ? 'flex' : 'hidden md:flex'} lg:flex`}>
+      <div className={`flex-1 flex flex-col  bg-white ${selectedChat ? 'flex' : 'hidden md:flex'} lg:flex`}>
         {selectedChat ? (
           <>
             {/* Chat Header */}

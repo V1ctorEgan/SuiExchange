@@ -114,7 +114,7 @@ export default function Marketplace() {
           </div>
         </div>
       <div className="flex items-center gap-3 sm:gap-6">
-        <span className="text-xs sm:text-sm text-slate-600 hidden sm:inline">0x742d...FEd9</span>
+        <span className="text-xs sm:text-sm text-slate-600 hidden sm:inline border border-black/20 lg:px-2  rounded-lg ">0x742d...FEd9</span>
         <Bell size={18} className="text-slate-600 cursor-pointer hover:text-slate-900" />
         <div className="w-9 h-9 sm:w-10 sm:h-10 bg-linear-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm cursor-pointer">
           U
