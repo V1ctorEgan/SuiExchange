@@ -4,7 +4,7 @@ import blockchainImg from '../assets/blockchain.jpg';
 import NFTSIMg from '../assets/Nfts.jpg'
 import NFTSIMgs from '../assets/morenft.jpg'
 import NFTSIMgs2 from '../assets/morenft2.jpg'
-import Shareskill from '../assets/shareskill.jpg'
+import Shareskill from '../assets/Shareskill.jpg'
 import finder from '../assets/finder.jpg'
 import findtalents from '../assets/findtalents.jpg'
 import growth from '../assets/growth.jpg'
