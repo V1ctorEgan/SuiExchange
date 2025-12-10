@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mysten/dapp-kit": "^0.19.11",
+    "@mysten/sui.js": "^0.54.1",
     "@tailwindcss/vite": "^4.1.17",
     "framer-motion": "^12.23.25",
     "lottie-react": "^2.4.1",
