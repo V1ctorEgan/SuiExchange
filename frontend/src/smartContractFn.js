@@ -245,23 +245,98 @@ export async function createServiceListing(
 }
 
 /**
- * Get all active service listings
+ * Get all active service listings (using events)
  * @param {Object} suiClient - Sui client instance
  */
 export async function getAllServiceListings(suiClient) {
-  // Query all shared ServiceListing objects
-  const response = await suiClient.getDynamicFields({
-    parentId: CONFIG.PACKAGE_ID,
-  });
+  try {
+    // Query ListingCreated events
+    const events = await suiClient.queryEvents({
+      query: {
+        MoveEventType: `${CONFIG.PACKAGE_ID}::listings::ListingCreated`,
+      },
+      limit: 50, // Adjust as needed
+    });
 
-  // Alternative: Use multiGetObjects if you have listing IDs
-  // For now, this is a simplified approach
+    // Extract listing IDs from events
+    const listingIds = events.data.map((event) => {
+      return event.parsedJson.listing_id;
+    });
 
-  // In production, you'd index these using a backend or events
-  // For hackathon, you can store listing IDs locally or query events
+    // Fetch all listing objects
+    const listings = await Promise.all(
+      listingIds.map(async (id) => {
+        try {
+          const obj = await suiClient.getObject({
+            id: id,
+            options: { showContent: true },
+          });
 
-  console.warn("Note: Full listing query requires event indexing or backend");
-  return [];
+          if (!obj.data || !obj.data.content) return null;
+
+          const fields = obj.data.content.fields;
+
+          // Fetch metadata from Walrus
+          const metadata = await fetchFromWalrus(fields.walrus_blob_id);
+
+          return {
+            listingId: id,
+            seller: fields.seller,
+            price: mistToSui(fields.price),
+            active: fields.active,
+            createdAt: fields.created_at,
+            ...metadata,
+          };
+        } catch (error) {
+          console.error("Error fetching listing:", id, error);
+          return null;
+        }
+      })
+    );
+
+    // Filter out null values and inactive listings
+    return listings.filter((l) => l && l.active);
+  } catch (error) {
+    console.error("Error fetching listings:", error);
+    return [];
+  }
+}
+
+/**
+ * Get service listings by category
+ * @param {Object} suiClient - Sui client instance
+ * @param {string} category - Category to filter by
+ */
+export async function getServiceListingsByCategory(suiClient, category) {
+  const allListings = await getAllServiceListings(suiClient);
+
+  if (category === "All services") {
+    return allListings;
+  }
+
+  return allListings.filter(
+    (listing) => listing.category?.toLowerCase() === category.toLowerCase()
+  );
+}
+
+/**
+ * Search service listings
+ * @param {Object} suiClient - Sui client instance
+ * @param {string} searchQuery - Search term
+ */
+export async function searchServiceListings(suiClient, searchQuery) {
+  const allListings = await getAllServiceListings(suiClient);
+
+  if (!searchQuery) return allListings;
+
+  const query = searchQuery.toLowerCase();
+
+  return allListings.filter(
+    (listing) =>
+      listing.title?.toLowerCase().includes(query) ||
+      listing.description?.toLowerCase().includes(query) ||
+      listing.category?.toLowerCase().includes(query)
+  );
 }
 
 /**
@@ -374,6 +449,117 @@ export async function getUserNFTs(suiClient, walletAddress) {
   return nfts;
 }
 
+/**
+ * List NFT for sale
+ * @param {string} nftObjectId - NFT object ID
+ * @param {number} priceInSUI - Price in SUI
+ * @param {Function} signAndExecute - From useSignAndExecuteTransaction hook
+ */
+export async function listNFTForSale(nftObjectId, priceInSUI, signAndExecute) {
+  const { Transaction } = await import("@mysten/sui/transactions");
+  const tx = new Transaction();
+
+  const priceInMist = Math.floor(priceInSUI * 1_000_000_000);
+
+  tx.moveCall({
+    target: `${CONFIG.PACKAGE_ID}::nft::list_nft`,
+    arguments: [tx.object(nftObjectId), tx.pure.u64(priceInMist)],
+  });
+
+  return new Promise((resolve, reject) => {
+    signAndExecute(
+      { transaction: tx },
+      {
+        onSuccess: (result) => resolve(result),
+        onError: (error) => reject(error),
+      }
+    );
+  });
+}
+
+/**
+ * Buy NFT
+ * @param {string} listingObjectId - NFT listing object ID
+ * @param {string} nftObjectId - NFT object ID
+ * @param {number} priceInSUI - Price in SUI
+ * @param {Function} signAndExecute - From useSignAndExecuteTransaction hook
+ */
+export async function buyNFT(
+  listingObjectId,
+  nftObjectId,
+  priceInSUI,
+  signAndExecute
+) {
+  const { Transaction } = await import("@mysten/sui/transactions");
+  const tx = new Transaction();
+
+  const priceInMist = Math.floor(priceInSUI * 1_000_000_000);
+  const [coin] = tx.splitCoins(tx.gas, [priceInMist]);
+
+  tx.moveCall({
+    target: `${CONFIG.PACKAGE_ID}::nft::buy_nft`,
+    arguments: [tx.object(listingObjectId), tx.object(nftObjectId), coin],
+  });
+
+  return new Promise((resolve, reject) => {
+    signAndExecute(
+      { transaction: tx },
+      {
+        onSuccess: (result) => resolve(result),
+        onError: (error) => reject(error),
+      }
+    );
+  });
+}
+
+/**
+ * Get all NFT listings
+ * @param {Object} suiClient - Sui client instance
+ */
+export async function getAllNFTListings(suiClient) {
+  try {
+    const events = await suiClient.queryEvents({
+      query: {
+        MoveEventType: `${CONFIG.PACKAGE_ID}::nft::NFTListed`,
+      },
+      limit: 50,
+    });
+
+    const listings = await Promise.all(
+      events.data.map(async (event) => {
+        try {
+          const nftId = event.parsedJson.nft_id;
+          const obj = await suiClient.getObject({
+            id: nftId,
+            options: { showContent: true },
+          });
+
+          if (!obj.data) return null;
+
+          const fields = obj.data.content.fields;
+          const metadata = await fetchFromWalrus(fields.walrus_blob_id);
+
+          return {
+            nftId,
+            name: fields.name,
+            seller: event.parsedJson.seller,
+            price: mistToSui(event.parsedJson.price),
+            ...metadata,
+          };
+        } catch (error) {
+          console.error("Error fetching NFT listing:", error);
+          return null;
+        }
+      })
+    );
+
+    return listings.filter((l) => l);
+  } catch (error) {
+    console.error("Error fetching NFT listings:", error);
+    return [];
+  }
+}
+
 // ============================================================================
 // GOVERNANCE FUNCTIONS
 // ============================================================================
@@ -448,6 +634,108 @@ export async function voteOnProposal(
   });
 }
 
+/**
+ * Execute proposal (finalize voting)
+ * @param {string} proposalObjectId - Proposal object ID
+ * @param {Function} signAndExecute - From useSignAndExecuteTransaction hook
+ */
+export async function executeProposal(proposalObjectId, signAndExecute) {
+  const { Transaction } = await import("@mysten/sui/transactions");
+  const tx = new Transaction();
+
+  tx.moveCall({
+    target: `${CONFIG.PACKAGE_ID}::governance::execute_proposal`,
+    arguments: [tx.object(proposalObjectId)],
+  });
+
+  return new Promise((resolve, reject) => {
+    signAndExecute(
+      { transaction: tx },
+      {
+        onSuccess: (result) => resolve(result),
+        onError: (error) => reject(error),
+      }
+    );
+  });
+}
+
+/**
+ * Get all proposals
+ * @param {Object} suiClient - Sui client instance
+ */
+export async function getAllProposals(suiClient) {
+  try {
+    const events = await suiClient.queryEvents({
+      query: {
+        MoveEventType: `${CONFIG.PACKAGE_ID}::governance::ProposalCreated`,
+      },
+      limit: 50,
+    });
+
+    const proposals = await Promise.all(
+      events.data.map(async (event) => {
+        try {
+          const proposalId = event.parsedJson.proposal_id;
+          const obj = await suiClient.getObject({
+            id: proposalId,
+            options: { showContent: true },
+          });
+
+          if (!obj.data) return null;
+
+          const fields = obj.data.content.fields;
+          const metadata = await fetchFromWalrus(fields.walrus_blob_id);
+
+          return {
+            proposalId,
+            title: fields.title,
+            proposer: fields.proposer,
+            votesFor: parseInt(fields.votes_for),
+            votesAgainst: parseInt(fields.votes_against),
+            active: fields.active,
+            createdAt: parseInt(fields.created_at),
+            votingEndsAt: parseInt(fields.voting_ends_at),
+            ...metadata,
+          };
+        } catch (error) {
+          console.error("Error fetching proposal:", error);
+          return null;
+        }
+      })
+    );
+
+    return proposals.filter((p) => p);
+  } catch (error) {
+    console.error("Error fetching proposals:", error);
+    return [];
+  }
+}
+
+/**
+ * Check if user has voted on proposal
+ * @param {Object} suiClient - Sui client instance
+ * @param {string} proposalObjectId - Proposal object ID
+ * @param {string} voterAddress - Voter's wallet address
+ */
+export async function hasUserVoted(suiClient, proposalObjectId, voterAddress) {
+  try {
+    const obj = await suiClient.getObject({
+      id: proposalObjectId,
+      options: { showContent: true },
+    });
+
+    if (!obj.data) return false;
+
+    const fields = obj.data.content.fields;
+    const voters = fields.voters?.fields?.contents || [];
+
+    return voters.some((voter) => voter.key === voterAddress);
+  } catch (error) {
+    console.error("Error checking vote status:", error);
+    return false;
+  }
+}
+
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
@@ -471,4 +759,23 @@ export function mistToSui(mist) {
  */
 export function formatSui(mist) {
   return (mist / 1_000_000_000).toFixed(4) + " SUI";
+}
+
+/**
+ * Format wallet address for display (0x1234...5678)
+ */
+export function formatAddress(address) {
+  if (!address) return "";
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+/**
+ * Format timestamp to readable date
+ */
+export function formatDate(timestamp) {
+  return new Date(timestamp).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }
