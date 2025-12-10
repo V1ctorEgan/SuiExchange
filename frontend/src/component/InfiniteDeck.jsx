@@ -50,7 +50,7 @@ export default function LedgeVotesScrollingDeck() {
   ];
 
   return (
-    <section className="w-full bg-white pt-21 ">
+    <section className="w-full bg-white pt-20 ">
       {/* SECTION HEADING */}
       <h2 className="text-xs md:text-xs font-bold text-center text-blue-500 mb-1">
         Secured. Transparent. Decentralized.
