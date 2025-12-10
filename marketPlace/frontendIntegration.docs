@@ -1,0 +1,452 @@
+// ============================================================================
+// WALRUS CONFIGURATION (No registration needed!)
+// ============================================================================
+
+export const WALRUS_CONFIG = {
+  // Public testnet endpoints - no API keys required
+  publisher: 'https://publisher.walrus-testnet.walrus.space',
+  aggregator: 'https://aggregator.walrus-testnet.walrus.space',
+  
+  // Storage duration in epochs (1 epoch ≈ 1 day on testnet)
+  defaultEpochs: 100,
+  
+  // File size limits
+  maxImageSize: 5 * 1024 * 1024,  // 5MB
+  maxJSONSize: 1 * 1024 * 1024,   // 1MB
+};
+
+// ============================================================================
+// UPLOAD TO WALRUS
+// ============================================================================
+
+/**
+ * Upload any data to Walrus
+ * @param {Blob|File|Object} data - File, Blob, or JSON object
+ * @param {number} epochs - Storage duration (default: 100)
+ * @returns {Promise<string>} Walrus blob ID
+ */
+export async function uploadToWalrus(data, epochs = WALRUS_CONFIG.defaultEpochs) {
+  let blob;
+  
+  // Convert data to Blob based on type
+  if (data instanceof File || data instanceof Blob) {
+    blob = data;
+  } else if (typeof data === 'object') {
+    // JSON object
+    blob = new Blob([JSON.stringify(data)], { 
+      type: 'application/json' 
+    });
+  } else if (typeof data === 'string') {
+    // Plain text
+    blob = new Blob([data], { type: 'text/plain' });
+  } else {
+    throw new Error('Unsupported data type for Walrus upload');
+  }
+  
+  try {
+    console.log('Uploading to Walrus...', blob.size, 'bytes');
+    
+    const response = await fetch(
+      `${WALRUS_CONFIG.publisher}/v1/store?epochs=${epochs}`,
+      {
+        method: 'PUT',
+        body: blob,
+      }
+    );
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Walrus upload failed: ${response.status} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log('Walrus upload result:', result);
+    
+    // Extract blob ID from response
+    const blobId = result.newlyCreated?.blobObject?.blobId || 
+                   result.alreadyCertified?.blobId;
+    
+    if (!blobId) {
+      throw new Error('No blob ID returned from Walrus');
+    }
+    
+    console.log('✅ Uploaded to Walrus:', blobId);
+    return blobId;
+    
+  } catch (error) {
+    console.error('❌ Walrus upload error:', error);
+    throw new Error(`Walrus upload failed: ${error.message}`);
+  }
+}
+
+// ============================================================================
+// FETCH FROM WALRUS
+// ============================================================================
+
+/**
+ * Fetch data from Walrus
+ * @param {string} blobId - Walrus blob ID
+ * @returns {Promise<Object|Blob>} Retrieved data
+ */
+export async function fetchFromWalrus(blobId) {
+  try {
+    console.log('Fetching from Walrus:', blobId);
+    
+    const response = await fetch(
+      `${WALRUS_CONFIG.aggregator}/v1/${blobId}`
+    );
+    
+    if (!response.ok) {
+      throw new Error(`Walrus fetch failed: ${response.status}`);
+    }
+    
+    const contentType = response.headers.get('content-type');
+    
+    // Return appropriate format based on content type
+    if (contentType?.includes('application/json')) {
+      return await response.json();
+    } else if (contentType?.includes('text')) {
+      return await response.text();
+    } else {
+      // Binary data (images, etc.)
+      return await response.blob();
+    }
+    
+  } catch (error) {
+    console.error('❌ Walrus fetch error:', error);
+    throw new Error(`Walrus fetch failed: ${error.message}`);
+  }
+}
+
+// ============================================================================
+// IMAGE HELPERS
+// ============================================================================
+
+/**
+ * Compress and upload image to Walrus
+ * @param {File} imageFile - Image file
+ * @param {number} maxWidth - Max width (default: 800px)
+ * @returns {Promise<string>} Walrus blob ID
+ */
+export async function uploadImage(imageFile, maxWidth = 800) {
+  // Validate file type
+  if (!imageFile.type.startsWith('image/')) {
+    throw new Error('File must be an image');
+  }
+  
+  // Check file size
+  if (imageFile.size > WALRUS_CONFIG.maxImageSize) {
+    throw new Error(`Image too large. Max size: ${WALRUS_CONFIG.maxImageSize / 1024 / 1024}MB`);
+  }
+  
+  // Compress image before upload
+  const compressedImage = await compressImage(imageFile, maxWidth);
+  
+  return await uploadToWalrus(compressedImage);
+}
+
+/**
+ * Compress image to reduce size
+ * @param {File} file - Image file
+ * @param {number} maxWidth - Max width in pixels
+ * @returns {Promise<Blob>} Compressed image blob
+ */
+async function compressImage(file, maxWidth) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      const img = new Image();
+      
+      img.onload = () => {
+        // Calculate new dimensions
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        
+        // Create canvas and compress
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convert to blob
+        canvas.toBlob(
+          (blob) => resolve(blob),
+          'image/jpeg',
+          0.8  // Quality (0-1)
+        );
+      };
+      
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
+ * Get full URL for Walrus image
+ * @param {string} blobId - Walrus blob ID
+ * @returns {string} Full image URL
+ */
+export function getWalrusImageURL(blobId) {
+  return `${WALRUS_CONFIG.aggregator}/v1/${blobId}`;
+}
+
+// ============================================================================
+// PROFILE HELPERS (Specific to your marketplace)
+// ============================================================================
+
+/**
+ * Upload user profile to Walrus
+ * @param {Object} profileData - Profile information
+ * @param {File} avatarFile - Avatar image file
+ * @returns {Promise<string>} Metadata blob ID
+ */
+export async function uploadProfile(profileData, avatarFile) {
+  try {
+    // 1. Upload avatar image
+    console.log('Uploading avatar...');
+    const avatarBlobId = await uploadImage(avatarFile);
+    
+    // 2. Create metadata JSON
+    const metadata = {
+      name: profileData.name,
+      bio: profileData.bio || '',
+      skills: profileData.skills || [],
+      social: profileData.social || {},
+      avatar_blob_id: avatarBlobId,
+      created_at: Date.now(),
+    };
+    
+    // 3. Upload metadata
+    console.log('Uploading metadata...');
+    const metadataBlobId = await uploadToWalrus(metadata);
+    
+    console.log('✅ Profile uploaded:', {
+      avatar: avatarBlobId,
+      metadata: metadataBlobId,
+    });
+    
+    return metadataBlobId;
+    
+  } catch (error) {
+    console.error('❌ Profile upload failed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch user profile from Walrus
+ * @param {string} metadataBlobId - Metadata blob ID from blockchain
+ * @returns {Promise<Object>} Profile data with avatar URL
+ */
+export async function fetchProfile(metadataBlobId) {
+  try {
+    const metadata = await fetchFromWalrus(metadataBlobId);
+    
+    // Add avatar URL for easy display
+    if (metadata.avatar_blob_id) {
+      metadata.avatar_url = getWalrusImageURL(metadata.avatar_blob_id);
+    }
+    
+    return metadata;
+    
+  } catch (error) {
+    console.error('❌ Profile fetch failed:', error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// SERVICE LISTING HELPERS
+// ============================================================================
+
+/**
+ * Upload service listing to Walrus
+ * @param {Object} listingData - Service details
+ * @param {File[]} images - Service images (optional)
+ * @returns {Promise<string>} Listing blob ID
+ */
+export async function uploadServiceListing(listingData, images = []) {
+  try {
+    // Upload images if provided
+    const imageBlobIds = [];
+    for (const image of images) {
+      console.log('Uploading service image...');
+      const blobId = await uploadImage(image);
+      imageBlobIds.push(blobId);
+    }
+    
+    // Create listing metadata
+    const metadata = {
+      title: listingData.title,
+      description: listingData.description,
+      category: listingData.category || 'Other',
+      deliverables: listingData.deliverables || '',
+      delivery_time: listingData.delivery_time || '',
+      image_blob_ids: imageBlobIds,
+      created_at: Date.now(),
+    };
+    
+    // Upload metadata
+    const metadataBlobId = await uploadToWalrus(metadata);
+    
+    console.log('✅ Service listing uploaded:', metadataBlobId);
+    return metadataBlobId;
+    
+  } catch (error) {
+    console.error('❌ Service listing upload failed:', error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// NFT HELPERS
+// ============================================================================
+
+/**
+ * Upload NFT metadata and image to Walrus
+ * @param {Object} nftData - NFT information
+ * @param {File} imageFile - NFT image
+ * @returns {Promise<string>} NFT metadata blob ID
+ */
+export async function uploadNFT(nftData, imageFile) {
+  try {
+    // 1. Upload NFT image
+    console.log('Uploading NFT image...');
+    const imageBlobId = await uploadImage(imageFile, 1200); // Higher quality for NFTs
+    
+    // 2. Create NFT metadata (follows standard format)
+    const metadata = {
+      name: nftData.name,
+      description: nftData.description || '',
+      image: getWalrusImageURL(imageBlobId),
+      image_blob_id: imageBlobId,
+      attributes: nftData.attributes || [],
+      created_at: Date.now(),
+    };
+    
+    // 3. Upload metadata
+    console.log('Uploading NFT metadata...');
+    const metadataBlobId = await uploadToWalrus(metadata);
+    
+    console.log('✅ NFT uploaded:', {
+      image: imageBlobId,
+      metadata: metadataBlobId,
+    });
+    
+    return metadataBlobId;
+    
+  } catch (error) {
+    console.error('❌ NFT upload failed:', error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// PROPOSAL HELPERS
+// ============================================================================
+
+/**
+ * Upload governance proposal to Walrus
+ * @param {Object} proposalData - Proposal details
+ * @returns {Promise<string>} Proposal blob ID
+ */
+export async function uploadProposal(proposalData) {
+  try {
+    const metadata = {
+      title: proposalData.title,
+      description: proposalData.description,
+      rationale: proposalData.rationale || '',
+      actions: proposalData.actions || [],
+      author: proposalData.author,
+      created_at: Date.now(),
+    };
+    
+    const blobId = await uploadToWalrus(metadata);
+    console.log('✅ Proposal uploaded:', blobId);
+    
+    return blobId;
+    
+  } catch (error) {
+    console.error('❌ Proposal upload failed:', error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// ERROR HANDLING & RETRY LOGIC
+// ============================================================================
+
+/**
+ * Upload with automatic retry on failure
+ * @param {Function} uploadFn - Upload function to retry
+ * @param {number} maxRetries - Max retry attempts
+ * @returns {Promise<string>} Blob ID
+ */
+export async function uploadWithRetry(uploadFn, maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await uploadFn();
+    } catch (error) {
+      console.warn(`Upload attempt ${attempt} failed:`, error.message);
+      
+      if (attempt === maxRetries) {
+        throw new Error(`Upload failed after ${maxRetries} attempts: ${error.message}`);
+      }
+      
+      // Wait before retry (exponential backoff)
+      const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
+
+// ============================================================================
+// USAGE EXAMPLES (for reference)
+// ============================================================================
+
+/*
+// Example 1: Upload user profile
+const profileBlobId = await uploadProfile({
+  name: 'Alice',
+  bio: 'Blockchain developer',
+  skills: ['React', 'Solidity', 'Move'],
+}, avatarFile);
+
+// Example 2: Fetch profile
+const profile = await fetchProfile(profileBlobId);
+console.log(profile.name); // 'Alice'
+// Use: <img src={profile.avatar_url} />
+
+// Example 3: Upload service listing
+const listingBlobId = await uploadServiceListing({
+  title: 'Build your website',
+  description: 'Professional web development',
+  category: 'Development',
+}, [image1, image2]);
+
+// Example 4: Upload NFT
+const nftBlobId = await uploadNFT({
+  name: 'Cool Art #123',
+  description: 'Unique digital art',
+  attributes: [
+    { trait_type: 'Color', value: 'Blue' }
+  ],
+}, nftImageFile);
+
+// Example 5: Upload with retry
+const blobId = await uploadWithRetry(async () => {
+  return await uploadImage(largeFile);
+});
+*/

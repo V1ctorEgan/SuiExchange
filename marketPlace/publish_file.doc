@@ -1,0 +1,408 @@
+swice@DESKTOP-TB0I0RS:/mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace$ sui client publish --gas-budget 100000000
+[warning] Client/Server api version mismatch, client api version : 1.60.0, server api version : 1.62.0
+[Note]: Dependency sources are no longer verified automatically during publication and upgrade. You can pass the `--verify-deps` option if you would like to verify them as part of publication or upgrade.
+INCLUDING DEPENDENCY Bridge
+INCLUDING DEPENDENCY SuiSystem
+INCLUDING DEPENDENCY Sui
+INCLUDING DEPENDENCY MoveStdlib
+BUILDING marketPlace
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/user_profile.move:5:23
+  │
+5 │     use sui::object::{Self, UID};
+  │                       ^^^^ Unnecessary alias 'object' for module 'sui::object'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/user_profile.move:5:29
+  │
+5 │     use sui::object::{Self, UID};
+  │                             ^^^ Unnecessary alias 'UID' for module member 'sui::object::UID'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/user_profile.move:6:27
+  │
+6 │     use sui::tx_context::{Self, TxContext};
+  │                           ^^^^ Unnecessary alias 'tx_context' for module 'sui::tx_context'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/user_profile.move:6:33
+  │
+6 │     use sui::tx_context::{Self, TxContext};
+  │                                 ^^^^^^^^^ Unnecessary alias 'TxContext' for module member 'sui::tx_context::TxContext'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/user_profile.move:7:14
+  │
+7 │     use sui::transfer;
+  │              ^^^^^^^^ Unnecessary alias 'transfer' for module 'sui::transfer'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W09014]: unused mutable reference '&mut' parameter
+   ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/user_profile.move:75:14
+   │
+75 │         ctx: &mut TxContext
+   │         ---  ^^^^^^^^^^^^^^ Mutable reference is never used mutably, consider switching to an immutable reference '&' instead
+   │         │     
+   │         For parameters, this can be silenced by prefixing the name with an underscore, e.g. '_ctx'
+   │
+   = This warning can be suppressed with '#[allow(unused_mut_parameter)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/nft.move:2:23
+  │
+2 │     use sui::object::{Self, UID, ID};
+  │                       ^^^^ Unnecessary alias 'object' for module 'sui::object'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/nft.move:2:29
+  │
+2 │     use sui::object::{Self, UID, ID};
+  │                             ^^^ Unnecessary alias 'UID' for module member 'sui::object::UID'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/nft.move:2:34
+  │
+2 │     use sui::object::{Self, UID, ID};
+  │                                  ^^ Unnecessary alias 'ID' for module member 'sui::object::ID'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/nft.move:3:14
+  │
+3 │     use sui::transfer;
+  │              ^^^^^^^^ Unnecessary alias 'transfer' for module 'sui::transfer'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/nft.move:4:27
+  │
+4 │     use sui::tx_context::{Self, TxContext};
+  │                           ^^^^ Unnecessary alias 'tx_context' for module 'sui::tx_context'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/nft.move:4:33
+  │
+4 │     use sui::tx_context::{Self, TxContext};
+  │                                 ^^^^^^^^^ Unnecessary alias 'TxContext' for module member 'sui::tx_context::TxContext'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[Lint W99002]: potentially unenforceable custom transfer/share/freeze policy
+    ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/nft.move:82:15
+    │
+ 82 │     entry fun list_nft(
+    │               ^^^^^^^^ Potential unintended implementation of a custom transfer function.
+ 83 │         nft: MarketplaceNFT,
+    │         --- An instance of a module-private type with a 'store' ability to be transferred coming from here
+    ·
+106 │         transfer::transfer(nft, tx_context::sender(ctx));
+    │                   -------- Instances of a type with a 'store' ability can be transferred using the 'public_transfer' function which often negates the intent of enforcing a custom transfer policy
+    │
+    = A custom transfer policy for a given type is implemented through calling the private 'transfer' function variant in the module defining this type
+    = This warning can be suppressed with '#[allow(lint(custom_state_change))]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[Lint W99002]: potentially unenforceable custom transfer/share/freeze policy
+    ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/nft.move:113:15
+    │
+113 │     entry fun buy_nft(
+    │               ^^^^^^^ Potential unintended implementation of a custom transfer function.
+114 │         listing: &mut NFTListing,
+115 │         nft: MarketplaceNFT,
+    │         --- An instance of a module-private type with a 'store' ability to be transferred coming from here
+    ·
+130 │         transfer::transfer(nft, buyer);
+    │                   -------- Instances of a type with a 'store' ability can be transferred using the 'public_transfer' function which often negates the intent of enforcing a custom transfer policy
+    │
+    = A custom transfer policy for a given type is implemented through calling the private 'transfer' function variant in the module defining this type
+    = This warning can be suppressed with '#[allow(lint(custom_state_change))]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W09014]: unused mutable reference '&mut' parameter
+    ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/nft.move:117:14
+    │
+117 │         ctx: &mut TxContext
+    │         ---  ^^^^^^^^^^^^^^ Mutable reference is never used mutably, consider switching to an immutable reference '&' instead
+    │         │     
+    │         For parameters, this can be silenced by prefixing the name with an underscore, e.g. '_ctx'
+    │
+    = This warning can be suppressed with '#[allow(unused_mut_parameter)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[Lint W99002]: potentially unenforceable custom transfer/share/freeze policy
+    ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/nft.move:144:15
+    │
+144 │     entry fun cancel_nft_listing(
+    │               ^^^^^^^^^^^^^^^^^^ Potential unintended implementation of a custom transfer function.
+145 │         listing: &mut NFTListing,
+146 │         nft: MarketplaceNFT,
+    │         --- An instance of a module-private type with a 'store' ability to be transferred coming from here
+    ·
+156 │         transfer::transfer(nft, listing.seller);
+    │                   -------- Instances of a type with a 'store' ability can be transferred using the 'public_transfer' function which often negates the intent of enforcing a custom transfer policy
+    │
+    = A custom transfer policy for a given type is implemented through calling the private 'transfer' function variant in the module defining this type
+    = This warning can be suppressed with '#[allow(lint(custom_state_change))]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/listings.move:5:23
+  │
+5 │     use sui::object::{Self, UID, ID};
+  │                       ^^^^ Unnecessary alias 'object' for module 'sui::object'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/listings.move:5:29
+  │
+5 │     use sui::object::{Self, UID, ID};
+  │                             ^^^ Unnecessary alias 'UID' for module member 'sui::object::UID'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/listings.move:5:34
+  │
+5 │     use sui::object::{Self, UID, ID};
+  │                                  ^^ Unnecessary alias 'ID' for module member 'sui::object::ID'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/listings.move:8:14
+  │
+8 │     use sui::transfer;
+  │              ^^^^^^^^ Unnecessary alias 'transfer' for module 'sui::transfer'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/listings.move:9:27
+  │
+9 │     use sui::tx_context::{Self, TxContext};
+  │                           ^^^^ Unnecessary alias 'tx_context' for module 'sui::tx_context'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/listings.move:9:33
+  │
+9 │     use sui::tx_context::{Self, TxContext};
+  │                                 ^^^^^^^^^ Unnecessary alias 'TxContext' for module member 'sui::tx_context::TxContext'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/governance.move:2:23
+  │
+2 │     use sui::object::{Self, UID, ID};
+  │                       ^^^^ Unnecessary alias 'object' for module 'sui::object'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/governance.move:2:29
+  │
+2 │     use sui::object::{Self, UID, ID};
+  │                             ^^^ Unnecessary alias 'UID' for module member 'sui::object::UID'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/governance.move:2:34
+  │
+2 │     use sui::object::{Self, UID, ID};
+  │                                  ^^ Unnecessary alias 'ID' for module member 'sui::object::ID'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/governance.move:3:14
+  │
+3 │     use sui::transfer;
+  │              ^^^^^^^^ Unnecessary alias 'transfer' for module 'sui::transfer'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/governance.move:4:27
+  │
+4 │     use sui::tx_context::{Self, TxContext};
+  │                           ^^^^ Unnecessary alias 'tx_context' for module 'sui::tx_context'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[W02021]: duplicate alias
+  ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/governance.move:4:33
+  │
+4 │     use sui::tx_context::{Self, TxContext};
+  │                                 ^^^^^^^^^ Unnecessary alias 'TxContext' for module member 'sui::tx_context::TxContext'. This alias is provided by default
+  │
+  = This warning can be suppressed with '#[allow(duplicate_alias)]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[Lint W99010]: unnecessary `entry` on a `public` function
+   ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/governance.move:81:12
+   │
+81 │     public entry fun vote(
+   │            ^^^^^ `entry` on `public` functions limits composability as it adds restrictions, e.g. the type of each return value must have `drop`. `entry` on `public` is only meaningful in niche scenarios.
+   │
+   = `public` functions can be called from PTBs. `entry` can be used to allow non-`public` functions to be called from PTBs, but it adds restrictions on the usage of input arguments and on the type of return values. Unless this `public` function interacts with an intricate set of other `entry` functions, the `entry` modifier should be removed.
+   = This warning can be suppressed with '#[allow(lint(public_entry))]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+warning[Lint W99010]: unnecessary `entry` on a `public` function
+    ┌─ /mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace/sources/governance.move:111:12
+    │
+111 │     public entry fun execute_proposal(
+    │            ^^^^^ `entry` on `public` functions limits composability as it adds restrictions, e.g. the type of each return value must have `drop`. `entry` on `public` is only meaningful in niche scenarios.
+    │
+    = `public` functions can be called from PTBs. `entry` can be used to allow non-`public` functions to be called from PTBs, but it adds restrictions on the usage of input arguments and on the type of return values. Unless this `public` function interacts with an intricate set of other `entry` functions, the `entry` modifier should be removed.
+    = This warning can be suppressed with '#[allow(lint(public_entry))]' applied to the 'module' or module member ('const', 'fun', or 'struct')
+
+Please report feedback on the linter warnings at https://forums.sui.io
+
+Skipping dependency verification
+Transaction Digest: 6LeeSeNXEe5GopAsMu2N33dqzsoNQPV4pAKtAgaUVv6P
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Transaction Data                                                                                             │
+├──────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Sender: 0x692445d87787a8ddd34a2713284a83888a1a9ab6c78f15445f1ab09a123f3545                                   │
+│ Gas Owner: 0x692445d87787a8ddd34a2713284a83888a1a9ab6c78f15445f1ab09a123f3545                                │
+│ Gas Budget: 100000000 MIST                                                                                   │
+│ Gas Price: 1000 MIST                                                                                         │
+│ Gas Payment:                                                                                                 │
+│  ┌──                                                                                                         │
+│  │ ID: 0xdfee49c9cfa79a316ba063a1d77c1c679d2022ad508767a9744d2b48a987c832                                    │
+│  │ Version: 349181040                                                                                        │
+│  │ Digest: 5gZKTdjCFBgaEWyoDo5cFRK6W9biF4FSawPDFoQ6U9tz                                                      │
+│  └──                                                                                                         │
+│                                                                                                              │
+│ Transaction Kind: Programmable                                                                               │
+│ ╭──────────────────────────────────────────────────────────────────────────────────────────────────────────╮ │
+│ │ Input Objects                                                                                            │ │
+│ ├──────────────────────────────────────────────────────────────────────────────────────────────────────────┤ │
+│ │ 0   Pure Arg: Type: address, Value: "0x692445d87787a8ddd34a2713284a83888a1a9ab6c78f15445f1ab09a123f3545" │ │
+│ ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────╯ │
+│ ╭─────────────────────────────────────────────────────────────────────────╮                                  │
+│ │ Commands                                                                │                                  │
+│ ├─────────────────────────────────────────────────────────────────────────┤                                  │
+│ │ 0  Publish:                                                             │                                  │
+│ │  ┌                                                                      │                                  │
+│ │  │ Dependencies:                                                        │                                  │
+│ │  │   0x0000000000000000000000000000000000000000000000000000000000000001 │                                  │
+│ │  │   0x0000000000000000000000000000000000000000000000000000000000000002 │                                  │
+│ │  └                                                                      │                                  │
+│ │                                                                         │                                  │
+│ │ 1  TransferObjects:                                                     │                                  │
+│ │  ┌                                                                      │                                  │
+│ │  │ Arguments:                                                           │                                  │
+│ │  │   Result 0                                                           │                                  │
+│ │  │ Address: Input  0                                                    │                                  │
+│ │  └                                                                      │                                  │
+│ ╰─────────────────────────────────────────────────────────────────────────╯                                  │
+│                                                                                                              │
+│ Signatures:                                                                                                  │
+│    Zo+gaDkhQ7nUGzafRXOHZDnypsUOWt6SeB1Donhi9OgWNsceK8OqFpK8xDp5KpnftG4KsdZ+lX/fH8HdDXwbCQ==                  │
+│                                                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭───────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Transaction Effects                                                                               │
+├───────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Digest: 6LeeSeNXEe5GopAsMu2N33dqzsoNQPV4pAKtAgaUVv6P                                              │
+│ Status: Success                                                                                   │
+│ Executed Epoch: 944                                                                               │
+│                                                                                                   │
+│ Created Objects:                                                                                  │
+│  ┌──                                                                                              │
+│  │ ID: 0x97950ce68bc7966ad7b7ece5e071e0a9c969af0452510c599a4338502487d076                         │
+│  │ Owner: Account Address ( 0x692445d87787a8ddd34a2713284a83888a1a9ab6c78f15445f1ab09a123f3545 )  │
+│  │ Version: 349181041                                                                             │
+│  │ Digest: Fwy2odXb1FGr93BW8bUQ2oLpeaXxeq94RYtpZG9ZKuhj                                           │
+│  └──                                                                                              │
+│  ┌──                                                                                              │
+│  │ ID: 0xddda65f9f32984409cb14bb6ae3beda6c8d7d8b13a5300f388edac19c729b909                         │
+│  │ Owner: Immutable                                                                               │
+│  │ Version: 1                                                                                     │
+│  │ Digest: 5kc4LJuQrDKFmoS7Q2hT3EoHdg3k7wv71BWFK47jn1vb                                           │
+│  └──                                                                                              │
+│ Mutated Objects:                                                                                  │
+│  ┌──                                                                                              │
+│  │ ID: 0xdfee49c9cfa79a316ba063a1d77c1c679d2022ad508767a9744d2b48a987c832                         │
+│  │ Owner: Account Address ( 0x692445d87787a8ddd34a2713284a83888a1a9ab6c78f15445f1ab09a123f3545 )  │
+│  │ Version: 349181041                                                                             │
+│  │ Digest: 69tkHsTBXnGZM2Vah11Gut5HqCcenrUmnnYftoXUbhDu                                           │
+│  └──                                                                                              │
+│ Gas Object:                                                                                       │
+│  ┌──                                                                                              │
+│  │ ID: 0xdfee49c9cfa79a316ba063a1d77c1c679d2022ad508767a9744d2b48a987c832                         │
+│  │ Owner: Account Address ( 0x692445d87787a8ddd34a2713284a83888a1a9ab6c78f15445f1ab09a123f3545 )  │
+│  │ Version: 349181041                                                                             │
+│  │ Digest: 69tkHsTBXnGZM2Vah11Gut5HqCcenrUmnnYftoXUbhDu                                           │
+│  └──                                                                                              │
+│ Gas Cost Summary:                                                                                 │
+│    Storage Cost: 45280800 MIST                                                                    │
+│    Computation Cost: 1000000 MIST                                                                 │
+│    Storage Rebate: 978120 MIST                                                                    │
+│    Non-refundable Storage Fee: 9880 MIST                                                          │
+│                                                                                                   │
+│ Transaction Dependencies:                                                                         │
+│    4HyP7s6t6Unh489tRcjGJpLEAe8jnrjt2oUEW9PQNMUd                                                   │
+│    5iMW4cq1M7sULbEG2PgD295HwyTRZg4N3vaPpYdD1YqY                                                   │
+│    Dd9pn1zFcSJjinxQewFd2gQdR4XKsHxFioD5MYnwLZQz                                                   │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─────────────────────────────╮
+│ No transaction block events │
+╰─────────────────────────────╯
+
+╭──────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Object Changes                                                                                   │
+├──────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Created Objects:                                                                                 │
+│  ┌──                                                                                             │
+│  │ ObjectID: 0x97950ce68bc7966ad7b7ece5e071e0a9c969af0452510c599a4338502487d076                  │
+│  │ Sender: 0x692445d87787a8ddd34a2713284a83888a1a9ab6c78f15445f1ab09a123f3545                    │
+│  │ Owner: Account Address ( 0x692445d87787a8ddd34a2713284a83888a1a9ab6c78f15445f1ab09a123f3545 ) │
+│  │ ObjectType: 0x2::package::UpgradeCap                                                          │
+│  │ Version: 349181041                                                                            │
+│  │ Digest: Fwy2odXb1FGr93BW8bUQ2oLpeaXxeq94RYtpZG9ZKuhj                                          │
+│  └──                                                                                             │
+│ Mutated Objects:                                                                                 │
+│  ┌──                                                                                             │
+│  │ ObjectID: 0xdfee49c9cfa79a316ba063a1d77c1c679d2022ad508767a9744d2b48a987c832                  │
+│  │ Sender: 0x692445d87787a8ddd34a2713284a83888a1a9ab6c78f15445f1ab09a123f3545                    │
+│  │ Owner: Account Address ( 0x692445d87787a8ddd34a2713284a83888a1a9ab6c78f15445f1ab09a123f3545 ) │
+│  │ ObjectType: 0x2::coin::Coin<0x2::sui::SUI>                                                    │
+│  │ Version: 349181041                                                                            │
+│  │ Digest: 69tkHsTBXnGZM2Vah11Gut5HqCcenrUmnnYftoXUbhDu                                          │
+│  └──                                                                                             │
+│ Published Objects:                                                                               │
+│  ┌──                                                                                             │
+│  │ PackageID: 0xddda65f9f32984409cb14bb6ae3beda6c8d7d8b13a5300f388edac19c729b909                 │
+│  │ Version: 1                                                                                    │
+│  │ Digest: 5kc4LJuQrDKFmoS7Q2hT3EoHdg3k7wv71BWFK47jn1vb                                          │
+│  │ Modules: governance, listings, nft, user_profile                                              │
+│  └──                                                                                             │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭───────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Balance Changes                                                                                   │
+├───────────────────────────────────────────────────────────────────────────────────────────────────┤
+│  ┌──                                                                                              │
+│  │ Owner: Account Address ( 0x692445d87787a8ddd34a2713284a83888a1a9ab6c78f15445f1ab09a123f3545 )  │
+│  │ CoinType: 0x2::sui::SUI                                                                        │
+│  │ Amount: -45302680                                                                              │
+│  └──                                                                                              │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────╯
+swice@DESKTOP-TB0I0RS:/mnt/c/users/GREAT JOE COMPUTERS/desktop/projects/suiExchange/marketPlace$ 
