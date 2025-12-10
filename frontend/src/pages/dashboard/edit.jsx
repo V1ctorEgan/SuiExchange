@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Search, Bell, Camera, Plus, X, UploadCloud } from 'lucide-react'
 
-export default function Portfolio() {
+export default function Edit() {
   const [username, setUsername] = useState('Your Name')
   const [email, setEmail] = useState('youremail@example.com')
   const [bio, setBio] = useState('Tell the community about yourself...')
@@ -83,9 +83,9 @@ export default function Portfolio() {
   return (
     <div className="flex flex-col h-full">
       {renderTopbar()}
-      <div className="flex-1 overflow-auto p-8">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-slate-900">Edit Profile</h1>
+      <div className="flex-1 overflow-auto p-4 mb-15 lg:mb-0 ">
+        <div className="flex items-center justify-between mb-4">
+          {/* <h1 className="text-3xl font-bold text-slate-900">Edit Profile</h1> */}
           <div className="text-sm text-slate-500">Last updated: just now</div>
         </div>
 
@@ -190,7 +190,7 @@ export default function Portfolio() {
 
               <div className="flex gap-2">
                 <input value={skillInput} onChange={(e)=>setSkillInput(e.target.value)} placeholder="Add up to 10 skills" className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:border-blue-400" />
-                <button onClick={addSkill} className="px-4 py-2 bg-blue-500 text-white rounded-md inline-flex items-center gap-2"><Plus size={14}/> Add</button>
+                <button onClick={addSkill} className="px-4 py-2 bg-blue-500 text-white rounded-md inline-flex items-center gap-2"><Plus size={14}/></button>
               </div>
             </div>
 

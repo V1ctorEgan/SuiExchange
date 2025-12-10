@@ -20,7 +20,7 @@ export default function App(){
   }
   return (
     <div className="pt-10 lg:pt-0">
-      <main className="mx-auto px-2 sm:px-4 md:px-6">
+      <main className="mx-auto px-2 sm:px-4 md:px-6  h-screen">
         <section className="relative overflow-hidden text-white px-2 sm:px-4">
           {/* <ImageCarousel> */}
           <div className='bg-linear-to-br from-gray-600 to-white-700 w-full rounded-lg sm:rounded-xl mt-4 sm:mt-6 md:mt-10'>

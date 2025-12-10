@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Search, Bell, Star, Heart } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import blockchainImg from '../../assets/blockchain.jpg';
 import NFTSIMg from '../../assets/Nfts.jpg'
 import NFTSIMgs from '../../assets/morenft.jpg'
@@ -8,10 +9,11 @@ import nft4 from '../../assets/nft4.jpg'
 import { Link } from 'react-router-dom'
 
 export default function Marketplace() {
+  const navigate = useNavigate()
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [likedTalents, setLikedTalents] = useState({})
 
-  const categories = ['all services', 'nft arts', 'software engineering', 'designers', 'smart contract developer', 'frontend', 'backend']
+  const categories = ['all services', 'nft arts', 'software engineering', 'designers', 'smart contract developer', 'frontend', 'backend','internship','mentorship']
 
   const handleLike = (talentId) => {
     setLikedTalents((prev) => ({
@@ -127,7 +129,7 @@ export default function Marketplace() {
   return (
     <div className="flex flex-col h-full  ">
       {renderTopbar()}
-      <div className="flex-1 overflow-auto  ">
+      <div className="flex-1 overflow-auto lg:pb-0 pb-15 ">
     
         <div className="px-3 sm:px-6 md:px-8 py-6 sm:py-12 text-black ">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">Find the Top <span className='text-blue-400'>Web3 talent</span> </h1>
@@ -154,7 +156,11 @@ export default function Marketplace() {
         <div className="p-3 sm:p-6 md:p-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
             {talents.map((talent) => (
-              <div key={talent.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow">
+              <div 
+                key={talent.id} 
+                onClick={() => navigate(`/dashboard/profile/${talent.id}`)}
+                className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+              >
                   
                   
                   <div className="flex items-center gap-3 mb-4 px-4 py-2 justify-between">

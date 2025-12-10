@@ -86,7 +86,7 @@ export default function Messages() {
       </div>
 
       {/* Chat History - On lg view, both list and history visible side by side */}
-      <div className={`flex-1 flex flex-col  bg-white ${selectedChat ? 'flex' : 'hidden md:flex'} lg:flex`}>
+      <div className={`flex-1 flex flex-col border lg:pb-0 pb-15  bg-white ${selectedChat ? 'flex' : 'hidden md:flex'} lg:flex`}>
         {selectedChat ? (
           <>
             {/* Chat Header */}

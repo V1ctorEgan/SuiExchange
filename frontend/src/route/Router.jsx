@@ -7,7 +7,8 @@ import Marketplace from "../pages/dashboard/Marketplace";
 import Messages from "../pages/dashboard/Messages";
 import Portfolio from "../pages/dashboard/Portfolio";
 import Settings from "../pages/dashboard/Settings";
-import Edit from "../pages/dashboard/edit";
+import Edit from "../pages/dashboard/Edit";
+import ProfileInfo from "../pages/dashboard/ProfileInfo";
 import RoleSelection from "../pages/RoleSelection";
 import ClientOnboarding from "../pages/ClientOnboarding";
 import FreelancerOnboarding from "../pages/FreelancerOnboarding";
@@ -36,6 +37,7 @@ export const Router = createBrowserRouter([
     children:[
       // {path:'/dashboard', element:<Home/>},
       {path:'/dashboard/marketplace', element:<Marketplace/>},
+      {path:'/dashboard/profile/:talentId', element:<ProfileInfo/>},
       {path:'/dashboard/messages', element:<Messages/>},
       {path:'/dashboard/portfolio', element:<Portfolio/>},
       {path:'/dashboard/edit', element:<Edit/>},

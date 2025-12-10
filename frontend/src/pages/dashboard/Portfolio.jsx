@@ -152,7 +152,7 @@ export default function Portfolio() {
                       {/** Featured images: replace placeholders with actual assets */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {[NFTSIMgs, nft3].map((imgSrc, i) => (
-                          <div key={i} className="rounded-lg overflow-hidden bg-white">
+                          <div key={i} className="rounded-lg overflow-hidden border border-black/20 bg-white">
                             <img src={imgSrc} alt={`Featured ${i+1}`} className="w-full h-40 object-cover" />
                             <div className="p-3">
                               <p className="font-semibold">Project Title {i+1}</p>

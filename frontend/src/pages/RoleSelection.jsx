@@ -23,7 +23,7 @@ export default function RoleSelection() {
         </div>
 
         <button
-          onClick={() => navigate('/onboarding/role')}
+          onClick={() => navigate('/')}
           className="flex items-center gap-2 text-black/50 hover:text-blue-400 mb-6 transition-colors mx-auto"
         >
           <ArrowLeft size={20} />
