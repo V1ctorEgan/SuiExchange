@@ -12,21 +12,19 @@ export default function RoleSelection() {
       
       <div className="max-w-4xl w-full">
         <div className="text-center mb-12">
-            <div className=' gap-3 justify-center hidden lg:flex'>
-          <h1 className="text-4xl md:text-5xl font-bold text-black mb-3">Welcome to  </h1>
-           <h1 className="text-4xl md:text-5xl font-bold text-black mb-3"><span className='w-10 h-2 rounded-lg bg-blue-400  text-white text-sui-300 font-bold'>SUI</span>Exchange</h1>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-3 mb-3">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-black">Welcome to</h1>
+            <div className="flex items-center ">
+              <span className="px-2 py-1 bg-blue-400 text-white font-bold rounded-lg text-2xl sm:text-3xl md:text-4xl lg:text-5xl">SUI</span>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-black">Exchange</h1>
             </div>
-               <div className=' gap-3 justify-center flex lg:hidden'>
-          <h1 className="text-2xl md:text-5xl font-bold text-black mb-3 whitespace-nowrap ">Welcome to  </h1>
-           <h1 className="text-2xl md:text-5xl font-bold text-black mb-3"><span className='w-10 h-2 rounded-lg bg-blue-400  text-white text-sui-300 font-bold'>SUI</span>Exchange</h1>
-            </div>
-          
-          <p className="text-black/60 text-xl">Choose your role to get started</p>
+          </div>
+          <p className="text-black/60 text-base sm:text-lg md:text-xl">Choose your role to get started</p>
         </div>
 
-            <button
+        <button
           onClick={() => navigate('/onboarding/role')}
-          className="flex items-center gap-2 text-black/50 hover:text-blue-400 mb-4 transition-colors"
+          className="flex items-center gap-2 text-black/50 hover:text-blue-400 mb-6 transition-colors mx-auto"
         >
           <ArrowLeft size={20} />
           <span>Back</span>
