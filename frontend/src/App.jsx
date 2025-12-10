@@ -50,7 +50,7 @@ export default function App(){
                         "Share Your Skills ",
                         "Hire Talents",
                       ]}
-                      mainClassName="px-1 sm:px-2 md:px-3 overflow-hidden text-blue-500 py-0.5 sm:py-1 md:py-2 justify-center rounded-lg text-sm sm:text-base md:text-lg"
+                      mainClassName="px-1 sm:px-2 md:px-3 overflow-hidden text-blue-500 py-0.5 sm:py-1 md:py-2 lg:text-5xl justify-center rounded-lg  sm:text-base md:text-lg"
                       staggerFrom={"last"}
                       initial={{ y: "100%" }}
                       animate={{ y: 0 }}

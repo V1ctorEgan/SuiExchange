@@ -96,7 +96,7 @@ export default function Marketplace() {
   ]
 
   const renderTopbar = () => (
-    <div className="bg-white border-b border-slate-200 px-3 sm:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+    <div className="bg-white border-b border-slate-200 px-3 sm:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 ">
       <div className="flex items-center gap-3 sm:gap-8 flex-1 justify-between w-full">
         <h2 className="text-blue-500 font-semibold text-sm sm:text-base hidden lg:block ">Marketplace</h2>
          <Link to="/" className="flex items-center lg:hidden ">
@@ -125,11 +125,11 @@ export default function Marketplace() {
   )
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full  ">
       {renderTopbar()}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto  ">
     
-        <div className="px-3 sm:px-6 md:px-8 py-6 sm:py-12 text-black">
+        <div className="px-3 sm:px-6 md:px-8 py-6 sm:py-12 text-black ">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">Find the Top <span className='text-blue-400'>Web3 talent</span> </h1>
           <p className="text-sm sm:text-base text-black/60 mb-6">Decentralised freelance services, build the future and chat</p>
 

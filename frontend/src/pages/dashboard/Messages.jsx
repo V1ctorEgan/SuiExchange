@@ -30,8 +30,8 @@ export default function Messages() {
 
   return (
     <div className="flex h-full bg-white flex-col md:flex-row">
-      {/* Chat List */}
-      <div className={`bg-white border-r border-slate-200 flex flex-col ${selectedChat ? 'hidden md:flex' : 'w-full md:w-80'}`}>
+      {/* Chat List - Always visible on lg, hidden on mobile when chat selected */}
+      <div className={`bg-white border-r border-slate-200 flex flex-col ${selectedChat ? 'hidden md:flex' : 'w-full md:w-80'} lg:w-80`}>
 
         <div className="p-4 border-b border-slate-200">
           <div className="relative">
@@ -85,16 +85,18 @@ export default function Messages() {
         </div>
       </div>
 
-      {/* Chat History */}
-      <div className={`${selectedChat ? 'flex' : 'hidden md:flex'} flex-1 flex-col bg-white`}> 
+      {/* Chat History - On lg view, both list and history visible side by side */}
+      <div className={`flex-1 flex flex-col bg-white ${selectedChat ? 'flex' : 'hidden md:flex'} lg:flex`}>
         {selectedChat ? (
           <>
             {/* Chat Header */}
             <div className="p-4 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                {/* Mobile back button */}
-                <button onClick={() => setSelectedChat(null)} className="md:hidden p-2 mr-2">
-                  <ChevronLeft size={20} />
+                <button
+                  onClick={() => setSelectedChat(null)}
+                  className="md:hidden lg:hidden"
+                >
+                  <ChevronLeft size={24} className="text-slate-600" />
                 </button>
                 <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
                   {chatList.find(c => c.id === selectedChat)?.name[0]}
@@ -142,7 +144,7 @@ export default function Messages() {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="hidden lg:flex flex-1 items-center justify-center">
             <div className="text-center">
               <MessageSquare size={48} className="text-slate-300 mx-auto mb-3" />
               <p className="text-slate-500">Select a conversation to start chatting</p>

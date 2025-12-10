@@ -89,7 +89,7 @@ export default function Portfolio() {
   )
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full lg:pb-0 pb-20">
       {renderTopbar()}
       <div className="flex-1 overflow-auto py-2 px-4 ">
         <div className="flex items-center justify-end mb-4">

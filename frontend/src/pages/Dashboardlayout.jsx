@@ -24,7 +24,7 @@ export default function Dashboardlayout() {
       {/* Desktop Sidebar (visible md+) */}
       <motion.div
         animate={{ width: isSidebarOpen ? 280 : 80 }}
-        className="hidden md:flex bg-white text-black transition-all duration-300 flex-col border-r border-black/10  fixed h-screen left-0 top-0 z-50"
+        className="hidden md:flex bg-white text-black transition-all duration-300 flex-col border-r border-black/10   fixed h-screen left-0 top-0 z-50"
       >
         {/* Logo */}
         <div className=" p-6  flex items-center justify-between ">
@@ -88,7 +88,7 @@ export default function Dashboardlayout() {
       </div>
 
       {/* Main Content with Outlet */}
-      <div className={`flex-1 transition-all duration-300  ${isSidebarOpen ? 'md:ml-72' : 'md:ml-20'}`}> 
+      <div className={`flex-1 transition-all duration-300  ${isSidebarOpen ? 'md:ml-70' : 'md:ml-20'}`}> 
         {/* On mobile leave full-width (bottom bar overlays) */}
         <Outlet />
       </div>
