@@ -11,30 +11,72 @@ export const CONFIG = {
 };
 
 // ============================================================================
-// WALRUS FUNCTIONS
+// WALRUS FUNCTIONS WITH IMPROVED ERROR HANDLING
 // ============================================================================
 
 /**
- * Upload data to Walrus
+ * Upload data to Walrus with retry logic
  */
-export async function uploadToWalrus(data, epochs = 100) {
-  const blob =
-    data instanceof Blob
-      ? data
-      : new Blob([JSON.stringify(data)], { type: "application/json" });
+export async function uploadToWalrus(data, epochs = 100, maxRetries = 3) {
+  let lastError;
 
-  const response = await fetch(
-    `${CONFIG.WALRUS_PUBLISHER}/v1/store?epochs=${epochs}`,
-    { method: "PUT", body: blob }
-  );
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Walrus upload attempt ${attempt}/${maxRetries}`);
 
-  if (!response.ok) {
-    throw new Error(`Walrus upload failed: ${response.statusText}`);
+      const blob =
+        data instanceof Blob
+          ? data
+          : new Blob([JSON.stringify(data)], { type: "application/json" });
+
+      const form = new FormData();
+      form.append("file", blob);
+      form.append("epochs", epochs.toString());
+
+      const response = await fetch(`${CONFIG.WALRUS_PUBLISHER}/v1/store`, {
+        method: "POST",
+        body: form,
+        signal: AbortSignal.timeout(30000),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(
+          `Walrus upload failed with status ${response.status}: ${text}`
+        );
+      }
+
+      const result = await response.json();
+      console.log("Walrus upload response:", result);
+
+      const blobId =
+        result.newlyCreated?.blobObject?.blobId ||
+        result.blobObject?.blobId ||
+        result.blobId;
+
+      if (!blobId) {
+        throw new Error(`Invalid Walrus response: ${JSON.stringify(result)}`);
+      }
+
+      return blobId;
+    } catch (error) {
+      lastError = error;
+      console.error(`Upload attempt ${attempt} failed:`, error);
+
+      if (error.name === "AbortError") {
+        throw new Error(
+          "Walrus upload timed out — network is probably unstable"
+        );
+      }
+
+      if (attempt < maxRetries) {
+        await new Promise((res) => setTimeout(res, attempt * 1500));
+      }
+    }
   }
 
-  const result = await response.json();
-  return (
-    result.newlyCreated?.blobObject?.blobId || result.alreadyCertified?.blobId
+  throw new Error(
+    `Failed to upload to Walrus after ${maxRetries} attempts: ${lastError.message}`
   );
 }
 
@@ -42,18 +84,25 @@ export async function uploadToWalrus(data, epochs = 100) {
  * Fetch data from Walrus
  */
 export async function fetchFromWalrus(blobId) {
-  const response = await fetch(`${CONFIG.WALRUS_AGGREGATOR}/v1/${blobId}`);
+  try {
+    const response = await fetch(`${CONFIG.WALRUS_AGGREGATOR}/v1/${blobId}`, {
+      signal: AbortSignal.timeout(15000),
+    });
 
-  if (!response.ok) {
-    throw new Error(`Walrus fetch failed: ${response.statusText}`);
+    if (!response.ok) {
+      throw new Error(`Walrus fetch failed: ${response.statusText}`);
+    }
+
+    const contentType = response.headers.get("content-type");
+
+    if (contentType?.includes("application/json")) {
+      return await response.json();
+    }
+    return await response.blob();
+  } catch (error) {
+    console.error("Error fetching from Walrus:", error);
+    throw error;
   }
-
-  const contentType = response.headers.get("content-type");
-
-  if (contentType?.includes("application/json")) {
-    return await response.json();
-  }
-  return await response.blob();
 }
 
 /**
@@ -64,10 +113,28 @@ export function getWalrusImageURL(blobId) {
 }
 
 /**
- * Compress image before upload
+ * Compress image before upload with validation
  */
 export async function compressImage(file, maxWidth = 800) {
   return new Promise((resolve, reject) => {
+    // Validate file
+    if (!file) {
+      reject(new Error("No file provided"));
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      reject(new Error("File must be an image"));
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      reject(new Error("Image must be less than 10MB"));
+      return;
+    }
+
+    console.log(`Compressing image: ${file.name} (${file.size} bytes)`);
+
     const reader = new FileReader();
 
     reader.onload = (e) => {
@@ -77,10 +144,14 @@ export async function compressImage(file, maxWidth = 800) {
         let width = img.width;
         let height = img.height;
 
+        console.log(`Original dimensions: ${width}x${height}`);
+
         if (width > maxWidth) {
           height = (height * maxWidth) / width;
           width = maxWidth;
         }
+
+        console.log(`Compressed dimensions: ${width}x${height}`);
 
         const canvas = document.createElement("canvas");
         canvas.width = width;
@@ -89,651 +160,27 @@ export async function compressImage(file, maxWidth = 800) {
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, width, height);
 
-        canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.8);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject(new Error("Failed to compress image"));
+              return;
+            }
+            console.log(`Compressed size: ${blob.size} bytes`);
+            resolve(blob);
+          },
+          "image/jpeg",
+          0.8
+        );
       };
 
-      img.onerror = reject;
+      img.onerror = () => reject(new Error("Failed to load image"));
       img.src = e.target.result;
     };
 
-    reader.onerror = reject;
+    reader.onerror = () => reject(new Error("Failed to read file"));
     reader.readAsDataURL(file);
   });
-}
-
-// ============================================================================
-// USER PROFILE FUNCTIONS
-// ============================================================================
-
-/**
- * Create user profile
- * @param {Object} profileData - { username, skills, bio }
- * @param {File} imageFile - Profile image file
- * @param {Function} signAndExecute - From useSignAndExecuteTransaction hook
- */
-export async function createProfile(profileData, imageFile, signAndExecute) {
-  // 1. Compress and upload image
-  const compressedImage = await compressImage(imageFile);
-  const avatarBlobId = await uploadToWalrus(compressedImage);
-
-  // 2. Create metadata
-  const metadata = {
-    username: profileData.username,
-    bio: profileData.bio || "",
-    skills: profileData.skills || [],
-    avatar_blob_id: avatarBlobId,
-    created_at: Date.now(),
-  };
-
-  // 3. Upload metadata
-  const metadataBlobId = await uploadToWalrus(metadata);
-
-  // 4. Create transaction
-  const { Transaction } = await import("@mysten/sui/transactions");
-  const tx = new Transaction();
-
-  tx.moveCall({
-    target: `${CONFIG.PACKAGE_ID}::user_profile::create_profile`,
-    arguments: [tx.pure.string(metadataBlobId)],
-  });
-
-  // 5. Execute
-  return new Promise((resolve, reject) => {
-    signAndExecute(
-      { transaction: tx },
-      {
-        onSuccess: (result) => resolve(result),
-        onError: (error) => reject(error),
-      }
-    );
-  });
-}
-
-/**
- * Fetch user profile from blockchain
- * @param {Object} suiClient - Sui client instance
- * @param {string} walletAddress - User's wallet address
- */
-export async function getUserProfile(suiClient, walletAddress) {
-  // Get all objects owned by user
-  const objects = await suiClient.getOwnedObjects({
-    owner: walletAddress,
-    filter: {
-      StructType: `${CONFIG.PACKAGE_ID}::user_profile::UserProfile`,
-    },
-    options: { showContent: true },
-  });
-
-  if (objects.data.length === 0) {
-    return null; // No profile found
-  }
-
-  // Get the profile object
-  const profileObject = objects.data[0];
-  const walrusBlobId = profileObject.data.content.fields.walrus_blob_id;
-
-  // Fetch metadata from Walrus
-  const metadata = await fetchFromWalrus(walrusBlobId);
-
-  // Add avatar URL
-  if (metadata.avatar_blob_id) {
-    metadata.avatar_url = getWalrusImageURL(metadata.avatar_blob_id);
-  }
-
-  return {
-    ...metadata,
-    profileObjectId: profileObject.data.objectId,
-  };
-}
-
-// ============================================================================
-// SERVICE LISTING FUNCTIONS
-// ============================================================================
-
-/**
- * Create service listing
- * @param {Object} listingData - { title, description, category, price }
- * @param {File[]} images - Service images (optional)
- * @param {Function} signAndExecute - From useSignAndExecuteTransaction hook
- */
-export async function createServiceListing(
-  listingData,
-  images,
-  signAndExecute
-) {
-  // 1. Upload images
-  const imageBlobIds = [];
-  for (const image of images) {
-    const compressed = await compressImage(image);
-    const blobId = await uploadToWalrus(compressed);
-    imageBlobIds.push(blobId);
-  }
-
-  // 2. Create metadata
-  const metadata = {
-    title: listingData.title,
-    description: listingData.description,
-    category: listingData.category || "Other",
-    image_blob_ids: imageBlobIds,
-    created_at: Date.now(),
-  };
-
-  // 3. Upload metadata
-  const metadataBlobId = await uploadToWalrus(metadata);
-
-  // 4. Create transaction (price in MIST: 1 SUI = 1,000,000,000 MIST)
-  const { Transaction } = await import("@mysten/sui/transactions");
-  const tx = new Transaction();
-
-  const priceInMist = Math.floor(listingData.price * 1_000_000_000);
-
-  tx.moveCall({
-    target: `${CONFIG.PACKAGE_ID}::listings::create_listing`,
-    arguments: [tx.pure.string(metadataBlobId), tx.pure.u64(priceInMist)],
-  });
-
-  // 5. Execute
-  return new Promise((resolve, reject) => {
-    signAndExecute(
-      { transaction: tx },
-      {
-        onSuccess: (result) => resolve(result),
-        onError: (error) => reject(error),
-      }
-    );
-  });
-}
-
-/**
- * Get all active service listings (using events)
- * @param {Object} suiClient - Sui client instance
- */
-export async function getAllServiceListings(suiClient) {
-  try {
-    // Query ListingCreated events
-    const events = await suiClient.queryEvents({
-      query: {
-        MoveEventType: `${CONFIG.PACKAGE_ID}::listings::ListingCreated`,
-      },
-      limit: 50, // Adjust as needed
-    });
-
-    // Extract listing IDs from events
-    const listingIds = events.data.map((event) => {
-      return event.parsedJson.listing_id;
-    });
-
-    // Fetch all listing objects
-    const listings = await Promise.all(
-      listingIds.map(async (id) => {
-        try {
-          const obj = await suiClient.getObject({
-            id: id,
-            options: { showContent: true },
-          });
-
-          if (!obj.data || !obj.data.content) return null;
-
-          const fields = obj.data.content.fields;
-
-          // Fetch metadata from Walrus
-          const metadata = await fetchFromWalrus(fields.walrus_blob_id);
-
-          return {
-            listingId: id,
-            seller: fields.seller,
-            price: mistToSui(fields.price),
-            active: fields.active,
-            createdAt: fields.created_at,
-            ...metadata,
-          };
-        } catch (error) {
-          console.error("Error fetching listing:", id, error);
-          return null;
-        }
-      })
-    );
-
-    // Filter out null values and inactive listings
-    return listings.filter((l) => l && l.active);
-  } catch (error) {
-    console.error("Error fetching listings:", error);
-    return [];
-  }
-}
-
-/**
- * Get service listings by category
- * @param {Object} suiClient - Sui client instance
- * @param {string} category - Category to filter by
- */
-export async function getServiceListingsByCategory(suiClient, category) {
-  const allListings = await getAllServiceListings(suiClient);
-
-  if (category === "All services") {
-    return allListings;
-  }
-
-  return allListings.filter(
-    (listing) => listing.category?.toLowerCase() === category.toLowerCase()
-  );
-}
-
-/**
- * Search service listings
- * @param {Object} suiClient - Sui client instance
- * @param {string} searchQuery - Search term
- */
-export async function searchServiceListings(suiClient, searchQuery) {
-  const allListings = await getAllServiceListings(suiClient);
-
-  if (!searchQuery) return allListings;
-
-  const query = searchQuery.toLowerCase();
-
-  return allListings.filter(
-    (listing) =>
-      listing.title?.toLowerCase().includes(query) ||
-      listing.description?.toLowerCase().includes(query) ||
-      listing.category?.toLowerCase().includes(query)
-  );
-}
-
-/**
- * Purchase a service
- * @param {string} listingObjectId - Listing object ID
- * @param {number} price - Price in SUI
- * @param {Function} signAndExecute - From useSignAndExecuteTransaction hook
- */
-export async function purchaseService(listingObjectId, price, signAndExecute) {
-  const { Transaction } = await import("@mysten/sui/transactions");
-  const tx = new Transaction();
-
-  // Split coin for payment
-  const priceInMist = Math.floor(price * 1_000_000_000);
-  const [coin] = tx.splitCoins(tx.gas, [priceInMist]);
-
-  // Call purchase function
-  tx.moveCall({
-    target: `${CONFIG.PACKAGE_ID}::listings::purchase_service`,
-    arguments: [tx.object(listingObjectId), coin],
-  });
-
-  return new Promise((resolve, reject) => {
-    signAndExecute(
-      { transaction: tx },
-      {
-        onSuccess: (result) => resolve(result),
-        onError: (error) => reject(error),
-      }
-    );
-  });
-}
-
-// ============================================================================
-// NFT FUNCTIONS
-// ============================================================================
-
-/**
- * Mint NFT
- * @param {Object} nftData - { name, description, attributes }
- * @param {File} imageFile - NFT image
- * @param {Function} signAndExecute - From useSignAndExecuteTransaction hook
- */
-export async function mintNFT(nftData, imageFile, signAndExecute) {
-  // 1. Upload image (higher quality for NFTs)
-  const compressedImage = await compressImage(imageFile, 1200);
-  const imageBlobId = await uploadToWalrus(compressedImage);
-
-  // 2. Create metadata
-  const metadata = {
-    name: nftData.name,
-    description: nftData.description || "",
-    image: getWalrusImageURL(imageBlobId),
-    image_blob_id: imageBlobId,
-    attributes: nftData.attributes || [],
-    created_at: Date.now(),
-  };
-
-  // 3. Upload metadata
-  const metadataBlobId = await uploadToWalrus(metadata);
-
-  // 4. Create transaction
-  const { Transaction } = await import("@mysten/sui/transactions");
-  const tx = new Transaction();
-
-  tx.moveCall({
-    target: `${CONFIG.PACKAGE_ID}::nft::mint_nft`,
-    arguments: [tx.pure.string(nftData.name), tx.pure.string(metadataBlobId)],
-  });
-
-  return new Promise((resolve, reject) => {
-    signAndExecute(
-      { transaction: tx },
-      {
-        onSuccess: (result) => resolve(result),
-        onError: (error) => reject(error),
-      }
-    );
-  });
-}
-
-/**
- * Get user's NFTs
- * @param {Object} suiClient - Sui client instance
- * @param {string} walletAddress - User's wallet address
- */
-export async function getUserNFTs(suiClient, walletAddress) {
-  const objects = await suiClient.getOwnedObjects({
-    owner: walletAddress,
-    filter: {
-      StructType: `${CONFIG.PACKAGE_ID}::nft::MarketplaceNFT`,
-    },
-    options: { showContent: true },
-  });
-
-  // Fetch metadata for each NFT
-  const nfts = await Promise.all(
-    objects.data.map(async (obj) => {
-      const walrusBlobId = obj.data.content.fields.walrus_blob_id;
-      const metadata = await fetchFromWalrus(walrusBlobId);
-
-      return {
-        ...metadata,
-        nftObjectId: obj.data.objectId,
-        name: obj.data.content.fields.name,
-      };
-    })
-  );
-
-  return nfts;
-}
-
-/**
- * List NFT for sale
- * @param {string} nftObjectId - NFT object ID
- * @param {number} priceInSUI - Price in SUI
- * @param {Function} signAndExecute - From useSignAndExecuteTransaction hook
- */
-export async function listNFTForSale(nftObjectId, priceInSUI, signAndExecute) {
-  const { Transaction } = await import("@mysten/sui/transactions");
-  const tx = new Transaction();
-
-  const priceInMist = Math.floor(priceInSUI * 1_000_000_000);
-
-  tx.moveCall({
-    target: `${CONFIG.PACKAGE_ID}::nft::list_nft`,
-    arguments: [tx.object(nftObjectId), tx.pure.u64(priceInMist)],
-  });
-
-  return new Promise((resolve, reject) => {
-    signAndExecute(
-      { transaction: tx },
-      {
-        onSuccess: (result) => resolve(result),
-        onError: (error) => reject(error),
-      }
-    );
-  });
-}
-
-/**
- * Buy NFT
- * @param {string} listingObjectId - NFT listing object ID
- * @param {string} nftObjectId - NFT object ID
- * @param {number} priceInSUI - Price in SUI
- * @param {Function} signAndExecute - From useSignAndExecuteTransaction hook
- */
-export async function buyNFT(
-  listingObjectId,
-  nftObjectId,
-  priceInSUI,
-  signAndExecute
-) {
-  const { Transaction } = await import("@mysten/sui/transactions");
-  const tx = new Transaction();
-
-  const priceInMist = Math.floor(priceInSUI * 1_000_000_000);
-  const [coin] = tx.splitCoins(tx.gas, [priceInMist]);
-
-  tx.moveCall({
-    target: `${CONFIG.PACKAGE_ID}::nft::buy_nft`,
-    arguments: [tx.object(listingObjectId), tx.object(nftObjectId), coin],
-  });
-
-  return new Promise((resolve, reject) => {
-    signAndExecute(
-      { transaction: tx },
-      {
-        onSuccess: (result) => resolve(result),
-        onError: (error) => reject(error),
-      }
-    );
-  });
-}
-
-/**
- * Get all NFT listings
- * @param {Object} suiClient - Sui client instance
- */
-export async function getAllNFTListings(suiClient) {
-  try {
-    const events = await suiClient.queryEvents({
-      query: {
-        MoveEventType: `${CONFIG.PACKAGE_ID}::nft::NFTListed`,
-      },
-      limit: 50,
-    });
-
-    const listings = await Promise.all(
-      events.data.map(async (event) => {
-        try {
-          const nftId = event.parsedJson.nft_id;
-          const obj = await suiClient.getObject({
-            id: nftId,
-            options: { showContent: true },
-          });
-
-          if (!obj.data) return null;
-
-          const fields = obj.data.content.fields;
-          const metadata = await fetchFromWalrus(fields.walrus_blob_id);
-
-          return {
-            nftId,
-            name: fields.name,
-            seller: event.parsedJson.seller,
-            price: mistToSui(event.parsedJson.price),
-            ...metadata,
-          };
-        } catch (error) {
-          console.error("Error fetching NFT listing:", error);
-          return null;
-        }
-      })
-    );
-
-    return listings.filter((l) => l);
-  } catch (error) {
-    console.error("Error fetching NFT listings:", error);
-    return [];
-  }
-}
-
-// ============================================================================
-// GOVERNANCE FUNCTIONS
-// ============================================================================
-
-/**
- * Create proposal
- * @param {Object} proposalData - { title, description, votingDuration }
- * @param {Function} signAndExecute - From useSignAndExecuteTransaction hook
- */
-export async function createProposal(proposalData, signAndExecute) {
-  // 1. Create metadata
-  const metadata = {
-    title: proposalData.title,
-    description: proposalData.description,
-    created_at: Date.now(),
-  };
-
-  // 2. Upload metadata
-  const metadataBlobId = await uploadToWalrus(metadata);
-
-  // 3. Create transaction
-  const { Transaction } = await import("@mysten/sui/transactions");
-  const tx = new Transaction();
-
-  tx.moveCall({
-    target: `${CONFIG.PACKAGE_ID}::governance::create_proposal`,
-    arguments: [
-      tx.pure.string(proposalData.title),
-      tx.pure.string(metadataBlobId),
-      tx.pure.u64(proposalData.votingDuration || 7), // Default 7 epochs
-    ],
-  });
-
-  return new Promise((resolve, reject) => {
-    signAndExecute(
-      { transaction: tx },
-      {
-        onSuccess: (result) => resolve(result),
-        onError: (error) => reject(error),
-      }
-    );
-  });
-}
-
-/**
- * Vote on proposal
- * @param {string} proposalObjectId - Proposal object ID
- * @param {boolean} voteFor - true = yes, false = no
- * @param {Function} signAndExecute - From useSignAndExecuteTransaction hook
- */
-export async function voteOnProposal(
-  proposalObjectId,
-  voteFor,
-  signAndExecute
-) {
-  const { Transaction } = await import("@mysten/sui/transactions");
-  const tx = new Transaction();
-
-  tx.moveCall({
-    target: `${CONFIG.PACKAGE_ID}::governance::vote`,
-    arguments: [tx.object(proposalObjectId), tx.pure.bool(voteFor)],
-  });
-
-  return new Promise((resolve, reject) => {
-    signAndExecute(
-      { transaction: tx },
-      {
-        onSuccess: (result) => resolve(result),
-        onError: (error) => reject(error),
-      }
-    );
-  });
-}
-
-/**
- * Execute proposal (finalize voting)
- * @param {string} proposalObjectId - Proposal object ID
- * @param {Function} signAndExecute - From useSignAndExecuteTransaction hook
- */
-export async function executeProposal(proposalObjectId, signAndExecute) {
-  const { Transaction } = await import("@mysten/sui/transactions");
-  const tx = new Transaction();
-
-  tx.moveCall({
-    target: `${CONFIG.PACKAGE_ID}::governance::execute_proposal`,
-    arguments: [tx.object(proposalObjectId)],
-  });
-
-  return new Promise((resolve, reject) => {
-    signAndExecute(
-      { transaction: tx },
-      {
-        onSuccess: (result) => resolve(result),
-        onError: (error) => reject(error),
-      }
-    );
-  });
-}
-
-/**
- * Get all proposals
- * @param {Object} suiClient - Sui client instance
- */
-export async function getAllProposals(suiClient) {
-  try {
-    const events = await suiClient.queryEvents({
-      query: {
-        MoveEventType: `${CONFIG.PACKAGE_ID}::governance::ProposalCreated`,
-      },
-      limit: 50,
-    });
-
-    const proposals = await Promise.all(
-      events.data.map(async (event) => {
-        try {
-          const proposalId = event.parsedJson.proposal_id;
-          const obj = await suiClient.getObject({
-            id: proposalId,
-            options: { showContent: true },
-          });
-
-          if (!obj.data) return null;
-
-          const fields = obj.data.content.fields;
-          const metadata = await fetchFromWalrus(fields.walrus_blob_id);
-
-          return {
-            proposalId,
-            title: fields.title,
-            proposer: fields.proposer,
-            votesFor: parseInt(fields.votes_for),
-            votesAgainst: parseInt(fields.votes_against),
-            active: fields.active,
-            createdAt: parseInt(fields.created_at),
-            votingEndsAt: parseInt(fields.voting_ends_at),
-            ...metadata,
-          };
-        } catch (error) {
-          console.error("Error fetching proposal:", error);
-          return null;
-        }
-      })
-    );
-
-    return proposals.filter((p) => p);
-  } catch (error) {
-    console.error("Error fetching proposals:", error);
-    return [];
-  }
-}
-
-/**
- * Check if user has voted on proposal
- * @param {Object} suiClient - Sui client instance
- * @param {string} proposalObjectId - Proposal object ID
- * @param {string} voterAddress - Voter's wallet address
- */
-export async function hasUserVoted(suiClient, proposalObjectId, voterAddress) {
-  try {
-    const obj = await suiClient.getObject({
-      id: proposalObjectId,
-      options: { showContent: true },
-    });
-
-    if (!obj.data) return false;
-
-    const fields = obj.data.content.fields;
-    const voters = fields.voters?.fields?.contents || [];
-
-    return voters.some((voter) => voter.key === voterAddress);
-  } catch (error) {
-    console.error("Error checking vote status:", error);
-    return false;
-  }
 }
 
 // ============================================================================
@@ -778,4 +225,27 @@ export function formatDate(timestamp) {
     month: "short",
     day: "numeric",
   });
+}
+
+// ============================================================================
+// TEST WALRUS CONNECTION
+// ============================================================================
+
+/**
+ * Test if Walrus is accessible
+ */
+export async function testWalrusConnection() {
+  try {
+    console.log("Testing Walrus connection...");
+
+    // Try to upload a small test blob
+    const testData = { test: "connection", timestamp: Date.now() };
+    const blobId = await uploadToWalrus(testData, 1); // 1 epoch for test
+
+    console.log("Walrus connection test successful:", blobId);
+    return { success: true, blobId };
+  } catch (error) {
+    console.error("Walrus connection test failed:", error);
+    return { success: false, error: error.message };
+  }
 }
