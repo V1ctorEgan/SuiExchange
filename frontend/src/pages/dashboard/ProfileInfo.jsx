@@ -7,6 +7,7 @@ import NFTSIMgs from '../../assets/morenft.jpg'
 import nft3 from '../../assets/nft3.jpg'
 import nft4 from '../../assets/nft4.jpg'
 import { Link } from 'react-router-dom'
+import useStore from '../../store/useStore'
 
 export default function ProfileInfo() {
   const navigate = useNavigate()
@@ -16,8 +17,11 @@ export default function ProfileInfo() {
   const [hoverRating, setHoverRating] = useState(0)
   const [ratingSubmitted, setRatingSubmitted] = useState(false)
 
-  // Mock talent data - in production, fetch from API or props
-  const talentData = {
+  // Prefer persisted profile from store
+  const store = useStore()
+  const persisted = talentId ? store.getProfileById(talentId) : null
+
+  const talentData = persisted || {
     id: talentId || 1,
     name: 'Alice Johnson',
     rating: 5.0,

@@ -1,14 +1,17 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Upload, Plus, X } from 'lucide-react'
+import useStore from '../store/useStore'
 
 export default function FreelancerOnboarding() {
   const [username, setUsername] = useState('')
   const [stack, setStack] = useState([])
   const [stackInput, setStackInput] = useState('')
+  const [bio, setBio] = useState('')
   const [avatarPreview, setAvatarPreview] = useState(null)
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const store = useStore()
 
   const addToStack = () => {
     const value = stackInput.trim()
@@ -25,8 +28,9 @@ export default function FreelancerOnboarding() {
   const handleImageChange = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const url = URL.createObjectURL(file)
-    setAvatarPreview(url)
+    const reader = new FileReader()
+    reader.onload = () => setAvatarPreview(reader.result)
+    reader.readAsDataURL(file)
   }
 
   const handleContinue = async (e) => {
@@ -42,13 +46,11 @@ export default function FreelancerOnboarding() {
 
     setLoading(true)
     try {
-      // Save to localStorage for now
-      localStorage.setItem('user_username', username)
-      localStorage.setItem('user_role', 'freelancer')
-      localStorage.setItem('user_stack', JSON.stringify(stack))
-      if (avatarPreview) {
-        localStorage.setItem('user_avatar', avatarPreview)
-      }
+      // Save to global store (persisted via zustand)
+      const id = `user_${Date.now()}`
+      store.setUser({ id, username, avatar: avatarPreview || null, skills: stack, role: 'freelancer', bio: bio || '', showTour: true })
+      // Also add a public profile entry for marketplace (saved but not promoted unless uploaded)
+      store.addProfile({ id, username, avatar: avatarPreview || null, skills: stack, bio: bio || '', price: 0, likes: 0, createdAt: new Date().toISOString() })
 
       // Redirect to dashboard
       setTimeout(() => {
@@ -56,7 +58,7 @@ export default function FreelancerOnboarding() {
       }, 500)
     } catch (error) {
       console.error('Error:', error)
-      alert('Something went wrong')
+      alert('Something went wrong: ' + (error.message || 'Unknown error'))
     } finally {
       setLoading(false)
     }
@@ -137,6 +139,19 @@ export default function FreelancerOnboarding() {
                 </button>
               </div>
               <p className="text-xs text-slate-500 mt-1">Add up to 10 skills (press Enter or click +)</p>
+            </div>
+
+            {/* Bio */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Short Bio</label>
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="Tell the community about yourself"
+                rows={3}
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+              />
+              <p className="text-xs text-slate-500 mt-1">A short summary that appears on your profile (optional)</p>
             </div>
 
             {/* Image Upload */}

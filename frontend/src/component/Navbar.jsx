@@ -3,6 +3,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Vote, Wallet, ContactIcon, NotebookIcon, WorkflowIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Lock, LogOut } from 'lucide-react'
+import {
+  ConnectButton,
+  useWallet,
+} from "@suiet/wallet-kit";
+import "@suiet/wallet-kit/style.css";
 // import WalletConnectModal from './WalletConnectModal'
 
 export default function Navbar(){
@@ -36,6 +41,7 @@ export default function Navbar(){
                 <Wallet size={16} />
                 <span className="hidden sm:inline">
                   Connect Wallet
+                     {/* <ConnectButton className="mx-auto" /> */}
                   {/* {isConnecting ? 'Connecting...' : 'Connect Wallet'} */}
                 </span>
               </span>

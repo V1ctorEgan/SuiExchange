@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import NFTSIMgs from '../../assets/morenft.jpg'
 import nft3 from '../../assets/nft3.jpg'
 import nft4 from '../../assets/nft4.jpg'
-import { Search, Bell, Camera, Plus, X, UploadCloud, Award, Heart, ThumbsDown, CalendarCheck, Share2 } from 'lucide-react'
+import { Search, Bell, Camera,Upload,UploadCloudIcon,UploadIcon, Plus, X, UploadCloud, Award, Heart, ThumbsDown, CalendarCheck, Share2 } from 'lucide-react'
+import useStore from '../../store/useStore'
 
 export default function Portfolio() {
   const [username, setUsername] = useState('Ndiukwu chukwuemeka paul ')
@@ -15,20 +16,34 @@ export default function Portfolio() {
   const [socialTitle, setSocialTitle] = useState('')
   const [socialUrl, setSocialUrl] = useState('')
   const [avatarPreview, setAvatarPreview] = useState(nft3)
-  const [offerType] = useState(localStorage.getItem('profile_offerType') || 'hire')
-  const [offerPrice] = useState(localStorage.getItem('profile_offerPrice') || '150')
+  const [offerType, setOfferType] = useState('hire')
+  const [offerPrice, setOfferPrice] = useState('150')
   const navigate = useNavigate()
+  const store = useStore()
+  const [uploadLoading, setUploadLoading] = useState(false)
+  const [isPublished, setIsPublished] = useState(false)
+  const [featuredWorks, setFeaturedWorks] = useState([])
 
   useEffect(() => {
+    // initialise from global store
     try {
-      const storedAvatar = localStorage.getItem('user_avatar')
-    //   const storedName = localStorage.getItem('user_username')
-      if (storedAvatar) setAvatarPreview(storedAvatar)
-    //   if (storedName) setUsername(storedName)
+      const user = store.user
+      if (user) {
+        if (user.username) setUsername(user.username)
+        if (user.bio) setBio(user.bio)
+        if (user.skills && user.skills.length) setSkills(user.skills)
+        if (user.avatar) setAvatarPreview(user.avatar)
+        if (user.offerType) setOfferType(user.offerType)
+        if (user.offerPrice) setOfferPrice(user.offerPrice)
+        if (user.featuredWorks && user.featuredWorks.length) setFeaturedWorks(user.featuredWorks)
+      }
+      // Check if profile is published in marketplace
+      const profileExists = store.getProfileById(user?.id)
+      setIsPublished(!!profileExists)
     } catch (e) {
-      // ignore localStorage errors
+      // ignore
     }
-  }, [])
+  }, [store.user?.id])
 
   const addSkill = () => {
     const value = skillInput.trim()
@@ -54,15 +69,80 @@ export default function Portfolio() {
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const url = URL.createObjectURL(file)
-    setAvatarPreview(url)
+    const reader = new FileReader()
+    reader.onload = () => setAvatarPreview(reader.result)
+    reader.readAsDataURL(file)
   }
 
   const handleSave = () => {
-    // stub: save profile data
-    console.log({ username, email, bio, skills, socials })
-    alert('Profile saved (stub)')
+    // persist to store
+    const id = store.user?.id || `user_${Date.now()}`
+    store.setUser({ ...store.user, id, username, bio, avatar: avatarPreview, skills, offerType, offerPrice })
+    // update marketplace profile if exists (save only)
+    store.updateProfile(id, { username, bio, avatar: avatarPreview, skills, offerType, offerPrice })
+    alert('Profile saved locally. Use Upload to publish to Marketplace.')
   }
+
+  const handleUpload = () => {
+    // Upload to marketplace (creates/updates profile entry and navigates)
+    setUploadLoading(true)
+    const id = store.user?.id || `user_${Date.now()}`
+    const profile = {
+      id,
+      username,
+      avatar: avatarPreview || null,
+      cardImage: avatarPreview || null,
+      skills,
+      bio,
+      price: offerPrice || 0,
+      likes: 0,
+      createdAt: new Date().toISOString(),
+    }
+    store.setUser({ ...store.user, id, username, bio, avatar: avatarPreview, skills, offerType, offerPrice, showTour: false })
+    store.addProfile(profile)
+    setIsPublished(true)
+    alert('✓ Successfully uploaded to Marketplace!')
+    setTimeout(() => {
+      setUploadLoading(false)
+      navigate('/dashboard/marketplace')
+    }, 500)
+  }
+
+  const handleTakeDown = () => {
+    // Remove profile from marketplace
+    const confirmed = window.confirm('Are you sure you want to take down your profile? It will no longer be visible on the Marketplace.')
+    if (!confirmed) return
+    
+    const id = store.user?.id
+    if (id) {
+      store.removeProfile(id)
+      setIsPublished(false)
+      alert('✓ Your profile has been taken down from the Marketplace.')
+    }
+  }
+
+  // simple tour state: show when new user flag present (read from store on mount)
+  const [showTour, setShowTour] = useState(() => {
+    try {
+      return !!store.user?.showTour
+    } catch {
+      return false
+    }
+  })
+  
+  useEffect(() => {
+    // Listen for changes to showTour flag
+    if (store.user?.showTour) {
+      setShowTour(true)
+    }
+  }, [store.user?.showTour])
+
+  const closeTour = () => {
+    setShowTour(false)
+    if (store.user) store.setUser({ ...store.user, showTour: false })
+  }
+
+  
 
   const renderTopbar = () => (
     <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
@@ -81,8 +161,8 @@ export default function Portfolio() {
       </div>
 
       <div className="flex items-center gap-4">
-        <button onClick={handleSave} className="px-4 py-2 bg-blue-500 text-white rounded-md font-medium">
-          Save changes
+        <button onClick={handleSave} className="px-4 py-2 flex items-center gap-2 bg-slate-500 text-white rounded-md font-medium">
+       <UploadCloud className='size-4'/> Save Changes 
         </button>
       </div>
     </div>
@@ -148,21 +228,50 @@ export default function Portfolio() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
           <div className="lg:col-span-2 space-y-4">
             <div className="bg-white rounded-xl p-6  shadow-sm">
-              <h3 className="font-semibold mb-4">Featured Work</h3>
-                      {/** Featured images: replace placeholders with actual assets */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {[NFTSIMgs, nft3].map((imgSrc, i) => (
-                          <div key={i} className="rounded-lg overflow-hidden border border-black/20 bg-white">
-                            <img src={imgSrc} alt={`Featured ${i+1}`} className="w-full h-40 object-cover" />
-                            <div className="p-3">
-                              <p className="font-semibold">Project Title {i+1}</p>
-                              <p className="text-xs text-slate-500">Framework: React, Tailwind</p>
-                              <p className="text-sm mt-2 text-slate-600">Short description of the project goes here.</p>
-                            </div>
-                          </div>
-                        ))}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold">Featured Work</h3>
+                <button onClick={()=>navigate('/dashboard/edit')} className="text-xs px-2 py-1 text-blue-500 hover:bg-blue-50 rounded">+ Add More</button>
+              </div>
+              
+              {featuredWorks && featuredWorks.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {featuredWorks.map((work, i) => (
+                    <div key={work.id || i} className="rounded-lg overflow-hidden border border-black/20 bg-white">
+                      {work.image ? (
+                        <img src={work.image} alt={work.title} className="w-full h-40 object-cover" />
+                      ) : (
+                        <div className="w-full h-40 bg-slate-100 flex items-center justify-center text-slate-400 text-sm">No image</div>
+                      )}
+                      <div className="p-3">
+                        <p className="font-semibold">{work.title}</p>
+                        <p className="text-xs text-slate-500">Skills: {work.skills}</p>
                       </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[NFTSIMgs, nft3].map((imgSrc, i) => (
+                    <div key={i} className="rounded-lg overflow-hidden border border-black/20 bg-white">
+                      <img src={imgSrc} alt={`Featured ${i+1}`} className="w-full h-40 object-cover" />
+                      <div className="p-3">
+                        <p className="font-semibold">No featured project</p>
+                        <p className="text-xs text-slate-500">Add works in Edit page</p>
+                        <p className="text-sm mt-2 text-slate-600">Showcase your best projects to clients.</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+            <button onClick={handleUpload} className="mt-4 w-full px-4 py-2 flex items-center justify-center gap-2 bg-blue-500 text-white rounded-md font-medium hover:bg-blue-600 disabled:bg-slate-400" disabled={uploadLoading}>
+              <UploadCloud className='size-4'/> {uploadLoading ? 'Uploading...' : 'Upload to Marketplace'}
+            </button>
+            {isPublished && (
+              <button onClick={handleTakeDown} className="mt-2 w-full px-4 py-2 flex items-center justify-center gap-2 bg-red-500 text-white rounded-md font-medium hover:bg-red-600">
+                <X className='size-4'/> Take Down Profile
+              </button>
+            )}
           </div>
 
           <div className="space-y-4">
@@ -205,6 +314,25 @@ export default function Portfolio() {
           </div>
         </div>
       </div>
+
+      {showTour && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-8 rounded-lg max-w-md">
+            <h3 className="text-2xl font-semibold mb-4">Welcome to your Portfolio! 🎉</h3>
+            <p className="text-sm text-slate-600 mb-6">Your profile is ready. You can:</p>
+            <ul className="text-sm text-slate-600 space-y-2 mb-6">
+              <li>✓ Save changes locally anytime</li>
+              <li>✓ Edit your profile details</li>
+              <li>✓ Upload to Marketplace when ready</li>
+            </ul>
+            <p className="text-xs text-slate-500 mb-6">Once uploaded, your profile will be visible to clients looking for talent like you.</p>
+            <div className="flex gap-3 justify-end">
+              <button onClick={closeTour} className="px-4 py-2 rounded-md border border-slate-300 hover:bg-slate-50">Skip for now</button>
+              <button onClick={() => { closeTour() }} className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Got it</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

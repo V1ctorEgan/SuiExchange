@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Search, Bell, Star, Heart } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import useStore from '../../store/useStore'
 import blockchainImg from '../../assets/blockchain.jpg';
 import NFTSIMg from '../../assets/Nfts.jpg'
 import NFTSIMgs from '../../assets/morenft.jpg'
@@ -10,8 +11,9 @@ import { Link } from 'react-router-dom'
 
 export default function Marketplace() {
   const navigate = useNavigate()
-  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedCategory, setSelectedCategory] = useState('all services')
   const [likedTalents, setLikedTalents] = useState({})
+  const [searchTerm, setSearchTerm] = useState('')
 
   const categories = ['all services', 'nft arts', 'software engineering', 'designers', 'smart contract developer', 'frontend', 'backend','internship','mentorship']
 
@@ -21,6 +23,7 @@ export default function Marketplace() {
       [talentId]: !prev[talentId],
     }))
   }
+
 
   const talents = [
     {
@@ -97,6 +100,50 @@ export default function Marketplace() {
     },
   ]
 
+  // if there are persisted profiles in the store, use them (map to expected shape)
+  const store = useStore()
+  const persisted = store.profiles && store.profiles.length ? store.profiles.map(p => {
+    // Use first featured work image if available, otherwise fall back to avatar
+    const cardImage = (p.featuredWorks && p.featuredWorks.length > 0) 
+      ? p.featuredWorks[0].image 
+      : (p.avatar || blockchainImg)
+    return {
+      id: p.id,
+      name: p.username,
+      rating: p.rating || 4.8,
+      reviews: p.reviews || 0,
+      image: p.username ? p.username.slice(0,2).toUpperCase() : 'U',
+      profileImage: p.avatar || null,
+      cardImage: cardImage,
+      skills: p.skills || [],
+      price: p.price || 0,
+      likes: p.likes || 0,
+      featuredWorks: p.featuredWorks || [],
+    }
+  }) : []
+
+  const displayTalents = persisted.length ? persisted : talents
+
+  // filter by category and search term (placeholder for on-chain sourced data)
+  const filteredTalents = displayTalents.filter((t) => {
+    const q = searchTerm.trim().toLowerCase()
+    // category filtering
+    const cat = selectedCategory.toLowerCase()
+    let categoryMatch = true
+    if (cat && cat !== 'all services') {
+      categoryMatch = (
+        (t.skills || []).some(s => s.toLowerCase().includes(cat)) ||
+        (t.name || '').toLowerCase().includes(cat) ||
+        (String(t.price || '')).toLowerCase().includes(cat) ||
+        (t.offerType || '').toLowerCase() === cat
+      )
+    }
+    if (!categoryMatch) return false
+    if (!q) return true
+    // search across name and skills
+    return (t.name || '').toLowerCase().includes(q) || (t.skills || []).some(s => s.toLowerCase().includes(q))
+  })
+
   const renderTopbar = () => (
     <div className="bg-white border-b border-slate-200 px-3 sm:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 ">
       <div className="flex items-center gap-3 sm:gap-8 flex-1 justify-between w-full">
@@ -110,6 +157,8 @@ export default function Marketplace() {
             <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
             <input
               type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search talents..."
               className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
             />
@@ -155,7 +204,7 @@ export default function Marketplace() {
 
         <div className="p-3 sm:p-6 md:p-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-            {talents.map((talent) => (
+            {filteredTalents.map((talent) => (
               <div 
                 key={talent.id} 
                 onClick={() => navigate(`/dashboard/profile/${talent.id}`)}
@@ -187,7 +236,7 @@ export default function Marketplace() {
                     </div>
                     <div className="flex flex-col items-center gap-1">
                       <button 
-                        onClick={() => handleLike(talent.id)}
+                        onClick={(e) => { e.stopPropagation(); handleLike(talent.id) }}
                         className="p-2 hover:bg-slate-100 rounded-full transition-colors"
                       >
                         <Heart 
@@ -203,14 +252,22 @@ export default function Marketplace() {
                     </div>
                   </div>
            
-                <div 
-                  className="h-48 w-full  relative flex items-end bg-cover bg-center"
-                  style={{ backgroundImage: `url(${talent.cardImage})` }}
-                >
-                  <div className="absolute bottom-4 left-4 text-white text-sm font-semibold opacity-90 bg-black/50 px-2 py-1 rounded">
-                    Web3 Developer
+                {talent.cardImage ? (
+                  <div 
+                    className="h-48 w-full  relative flex items-end bg-cover bg-center"
+                    style={{ backgroundImage: `url(${talent.cardImage})` }}
+                  >
+                    <div className="absolute bottom-4 left-4 text-white text-sm font-semibold opacity-90 bg-black/50 px-2 py-1 rounded">
+                      {talent.featuredWorks && talent.featuredWorks.length > 0 
+                        ? talent.featuredWorks[0].title 
+                        : 'Web3 Developer'}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="h-48 w-full relative flex items-center justify-center bg-slate-100 text-slate-600">
+                    <div className="text-sm">No featured project</div>
+                  </div>
+                )}
 
                 <div className="p-4">
               

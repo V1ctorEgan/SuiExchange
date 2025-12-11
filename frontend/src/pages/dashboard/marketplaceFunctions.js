@@ -45,11 +45,18 @@ export async function createProfile(profileData = {}, imageFile = null, signAndE
       }
     }
 
-    // Persist to localStorage (mock DB)
-    const raw = localStorage.getItem('marketplace_profiles')
-    const list = raw ? JSON.parse(raw) : []
-    list.push(profile)
-    localStorage.setItem('marketplace_profiles', JSON.stringify(list))
+    // Persist to global store (Zustand)
+    try {
+      const useStore = require('../../store/useStore').default
+      const store = useStore.getState()
+      store.addProfile(profile)
+    } catch (e) {
+      // fallback to localStorage if store not available
+      const raw = localStorage.getItem('marketplace_profiles')
+      const list = raw ? JSON.parse(raw) : []
+      list.push(profile)
+      localStorage.setItem('marketplace_profiles', JSON.stringify(list))
+    }
 
     return profile
   } catch (err) {
@@ -58,11 +65,19 @@ export async function createProfile(profileData = {}, imageFile = null, signAndE
 }
 
 export async function getUserProfile({ username, id } = {}) {
-  const raw = localStorage.getItem('marketplace_profiles')
-  const list = raw ? JSON.parse(raw) : []
-  if (id) return list.find((p) => p.id === id) || null
-  if (username) return list.find((p) => p.username === username) || null
-  return null
+  try {
+    const useStore = require('../../store/useStore').default
+    const store = useStore.getState()
+    if (id) return store.profiles.find((p) => p.id === id) || null
+    if (username) return store.profiles.find((p) => p.username === username) || null
+    return null
+  } catch (e) {
+    const raw = localStorage.getItem('marketplace_profiles')
+    const list = raw ? JSON.parse(raw) : []
+    if (id) return list.find((p) => p.id === id) || null
+    if (username) return list.find((p) => p.username === username) || null
+    return null
+  }
 }
 
 export async function createServiceListing(listing = {}, imageFile = null, signAndExecute) {
@@ -89,10 +104,16 @@ export async function createServiceListing(listing = {}, imageFile = null, signA
       }
     }
 
-    const raw = localStorage.getItem('marketplace_services')
-    const list = raw ? JSON.parse(raw) : []
-    list.push(service)
-    localStorage.setItem('marketplace_services', JSON.stringify(list))
+    try {
+      const useStore = require('../../store/useStore').default
+      const store = useStore.getState()
+      store.addService(service)
+    } catch (e) {
+      const raw = localStorage.getItem('marketplace_services')
+      const list = raw ? JSON.parse(raw) : []
+      list.push(service)
+      localStorage.setItem('marketplace_services', JSON.stringify(list))
+    }
 
     return service
   } catch (err) {

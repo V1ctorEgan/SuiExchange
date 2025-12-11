@@ -254,11 +254,7 @@ export async function getAllServiceListings(suiClient) {
     parentId: CONFIG.PACKAGE_ID,
   });
 
-  // Alternative: Use multiGetObjects if you have listing IDs
-  // For now, this is a simplified approach
 
-  // In production, you'd index these using a backend or events
-  // For hackathon, you can store listing IDs locally or query events
 
   console.warn("Note: Full listing query requires event indexing or backend");
   return [];

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
+import useStore from '../store/useStore'
 
 export default function ClientOnboarding() {
   const [username, setUsername] = useState('')
@@ -16,9 +17,9 @@ export default function ClientOnboarding() {
 
     setLoading(true)
     try {
-      // Save to localStorage for now
-      localStorage.setItem('user_username', username)
-      localStorage.setItem('user_role', 'client')
+      // Save to global store (persisted via zustand)
+      const id = `user_${Date.now()}`
+      useStore.getState().setUser({ id, username, avatar: null, skills: [], role: 'client', bio: '' })
       
       // Redirect to dashboard
       setTimeout(() => {
