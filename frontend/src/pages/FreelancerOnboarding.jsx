@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Upload, Plus, X } from 'lucide-react'
 import useStore from '../store/useStore'
+import { useWallet } from '@suiet/wallet-kit'
 
 export default function FreelancerOnboarding() {
   const [username, setUsername] = useState('')
@@ -15,6 +16,7 @@ export default function FreelancerOnboarding() {
   const [walrusStatus, setWalrusStatus] = useState(null)
   const navigate = useNavigate()
   const store = useStore()
+  const wallet = useWallet() 
 
   const addToStack = () => {
     const value = stackInput.trim()
@@ -53,9 +55,26 @@ export default function FreelancerOnboarding() {
     try {
       // Save to global store (persisted via zustand)
       const id = `user_${Date.now()}`
-      store.setUser({ id, username, avatar: avatarPreview || null, skills: stack, role: 'freelancer', bio: bio || '', showTour: true })
+      store.setUser({ 
+        id, 
+        username, 
+        avatar: avatarPreview || null, 
+        skills: stack, 
+        role: 'freelancer', 
+        bio: bio || '', 
+        showTour: true 
+      })
       // Also add a public profile entry for marketplace (saved but not promoted unless uploaded)
-      store.addProfile({ id, username, avatar: avatarPreview || null, skills: stack, bio: bio || '', price: 0, likes: 0, createdAt: new Date().toISOString() })
+      store.addProfile({ 
+        id, 
+        username, 
+        avatar: avatarPreview || null, 
+        skills: stack, 
+        bio: bio || '', 
+        price: 0, 
+        likes: 0, 
+        createdAt: new Date().toISOString() 
+      })
 
       // Redirect to dashboard
       setTimeout(() => {
@@ -92,7 +111,7 @@ export default function FreelancerOnboarding() {
             {/* Username */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Username
+                Username *
               </label>
               <input
                 type="text"
@@ -159,10 +178,10 @@ export default function FreelancerOnboarding() {
               <p className="text-xs text-slate-500 mt-1">A short summary that appears on your profile (optional)</p>
             </div>
 
-            {/* Image Upload */}
+            {/* Image Upload - Now Optional */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Profile Image *
+                Profile Image (Optional)
               </label>
 
               <div className="flex flex-col md:flex-row gap-4">
@@ -192,7 +211,10 @@ export default function FreelancerOnboarding() {
                       />
                       <button
                         type="button"
-                        onClick={() => setAvatarPreview(null)}
+                        onClick={() => {
+                          setAvatarPreview(null)
+                          setAvatarFile(null)
+                        }}
                         className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
                       >
                         <X size={16} />
@@ -201,13 +223,17 @@ export default function FreelancerOnboarding() {
                   </div>
                 )}
               </div>
-              <p className="text-xs text-slate-500 mt-2">This image will be your profile avatar</p>
+              <p className="text-xs text-slate-500 mt-2">
+                {avatarPreview 
+                  ? 'This image will be your profile avatar' 
+                  : 'Skip for now - you can add a profile picture later'}
+              </p>
             </div>
 
             {/* SUBMIT */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !username.trim() || stack.length === 0}
               className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-slate-400 text-white font-semibold py-3 rounded-lg transition-colors duration-200"
             >
               {loading ? uploadProgress || 'Processing...' : !wallet.connected ? 'Connect Wallet First' : 'Continue to Dashboard'}
