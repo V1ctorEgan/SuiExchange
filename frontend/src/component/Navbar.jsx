@@ -3,6 +3,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Vote, Wallet, ContactIcon, NotebookIcon, WorkflowIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Lock, LogOut } from 'lucide-react'
+import {
+  ConnectButton,
+  useWallet,
+} from "@suiet/wallet-kit";
+import "@suiet/wallet-kit/style.css";
 // import WalletConnectModal from './WalletConnectModal'
 import {
   ConnectButton,

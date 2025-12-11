@@ -1,5 +1,7 @@
-import React, { useState } from 'react'
-import { Search, Bell, Camera, Plus, X, UploadCloud } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Search, Bell, Camera, Plus, X, UploadCloud, Trash2 } from 'lucide-react'
+import useStore from '../../store/useStore'
 
 export default function Edit() {
   const [username, setUsername] = useState('Your Name')
@@ -11,8 +13,32 @@ export default function Edit() {
   const [socialTitle, setSocialTitle] = useState('')
   const [socialUrl, setSocialUrl] = useState('')
   const [avatarPreview, setAvatarPreview] = useState(null)
-  const [offerType, setOfferType] = useState(() => localStorage.getItem('profile_offerType') || 'hire')
-  const [offerPrice, setOfferPrice] = useState(() => localStorage.getItem('profile_offerPrice') || '')
+  const navigate = useNavigate()
+  const store = useStore()
+  const [offerType, setOfferType] = useState('hire')
+  const [offerPrice, setOfferPrice] = useState('')
+  const [featuredWorks, setFeaturedWorks] = useState([])
+  const [workTitle, setWorkTitle] = useState('')
+  const [workSkills, setWorkSkills] = useState([])
+  const [workSkillInput, setWorkSkillInput] = useState('')
+  const [workImage, setWorkImage] = useState(null)
+
+  useEffect(() => {
+    try {
+      const user = store.user
+      if (user) {
+        if (user.username) setUsername(user.username)
+        if (user.bio) setBio(user.bio)
+        if (user.skills && user.skills.length) setSkills(user.skills)
+        if (user.avatar) setAvatarPreview(user.avatar)
+        if (user.offerType) setOfferType(user.offerType)
+        if (user.offerPrice) setOfferPrice(user.offerPrice)
+        if (user.featuredWorks && user.featuredWorks.length) setFeaturedWorks(user.featuredWorks)
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [store.user])
 
   const addSkill = () => {
     const value = skillInput.trim()
@@ -38,22 +64,62 @@ export default function Edit() {
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const url = URL.createObjectURL(file)
-    setAvatarPreview(url)
+    const reader = new FileReader()
+    reader.onload = () => setAvatarPreview(reader.result)
+    reader.readAsDataURL(file)
+  }
+
+  const handleWorkImageChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => setWorkImage(reader.result)
+    reader.readAsDataURL(file)
+  }
+
+  const addFeaturedWork = () => {
+    if (!workTitle.trim()) {
+      alert('Please enter a work title')
+      return
+    }
+    if (!workSkills.trim()) {
+      alert('Please enter skills/frameworks used')
+      return
+    }
+    if (!workImage) {
+      alert('Please upload an image')
+      return
+    }
+    
+    const newWork = {
+      id: `work_${Date.now()}`,
+      title: workTitle,
+      skills: workSkills,
+      image: workImage,
+    }
+    
+    setFeaturedWorks([...featuredWorks, newWork])
+    setWorkTitle('')
+    setWorkSkills('')
+    setWorkImage(null)
+  }
+
+  const removeFeaturedWork = (idx) => {
+    setFeaturedWorks(featuredWorks.filter((_, i) => i !== idx))
   }
 
   const handleSave = () => {
-  
-    console.log({ username, email, bio, skills, socials, offerType, offerPrice })
-
+    console.log({ username, email, bio, skills, socials, offerType, offerPrice, featuredWorks })
     try {
-      localStorage.setItem('profile_offerType', offerType)
-      localStorage.setItem('profile_offerPrice', offerPrice)
+      const id = store.user?.id || `user_${Date.now()}`
+      // save to global store
+      store.setUser({ ...store.user, id, username, bio, avatar: avatarPreview, skills, featuredWorks })
+      store.updateProfile(id, { username, bio, avatar: avatarPreview, offerType, offerPrice, skills, featuredWorks })
+      // After saving edits, go to Portfolio so the user can choose to upload to marketplace
+      navigate('/dashboard/portfolio')
     } catch (e) {
-     
-      console.warn('localStorage unavailable', e)
+      console.warn('store unavailable', e)
     }
-    alert('Profile saved (stub)')
   }
 
   const renderTopbar = () => (
@@ -191,6 +257,86 @@ export default function Edit() {
               <div className="flex gap-2">
                 <input value={skillInput} onChange={(e)=>setSkillInput(e.target.value)} placeholder="Add up to 10 skills" className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:border-blue-400" />
                 <button onClick={addSkill} className="px-4 py-2 bg-blue-500 text-white rounded-md inline-flex items-center gap-2"><Plus size={14}/></button>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+              <h3 className="font-semibold mb-4">Featured Works</h3>
+              
+              {/* Display added featured works */}
+              {featuredWorks.length > 0 && (
+                <div className="mb-6 space-y-3">
+                  <p className="text-sm text-slate-600 font-medium">Added Works ({featuredWorks.length})</p>
+                  {featuredWorks.map((work, idx) => (
+                    <div key={work.id} className="bg-slate-50 rounded-lg p-4 border border-slate-200 flex gap-4">
+                      {work.image && (
+                        <img src={work.image} alt={work.title} className="w-16 h-16 rounded object-cover shrink-0" />
+                      )}
+                      <div className="flex-1">
+                        <p className="font-semibold text-slate-900">{work.title}</p>
+                        <p className="text-sm text-slate-600">{work.skills}</p>
+                      </div>
+                      <button
+                        onClick={() => removeFeaturedWork(idx)}
+                        className="p-2 hover:bg-red-50 text-red-500 rounded"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Add new featured work form */}
+              <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-4">
+                <h4 className="font-medium text-slate-900">Add New Work</h4>
+                
+                <div>
+                  <label className="text-sm text-slate-600">Project Title</label>
+                  <input
+                    type="text"
+                    value={workTitle}
+                    onChange={(e) => setWorkTitle(e.target.value)}
+                    placeholder="e.g. E-commerce Platform Redesign"
+                    className="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:border-blue-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-slate-600">Skills & Frameworks Used</label>
+                  <textarea
+                    value={workSkills}
+                    onChange={(e) => setWorkSkills(e.target.value)}
+                    placeholder="e.g. React, Tailwind CSS, Node.js, MongoDB"
+                    rows={3}
+                    className="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:border-blue-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-slate-600">Project Image</label>
+                  <div className="mt-2 flex gap-3 items-end">
+                    <div className="flex-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleWorkImageChange}
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:border-blue-400 text-sm"
+                      />
+                    </div>
+                    {workImage && (
+                      <img src={workImage} alt="work preview" className="w-16 h-16 rounded object-cover" />
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  onClick={addFeaturedWork}
+                  className="w-full px-4 py-2 bg-blue-500 text-white rounded-md font-medium hover:bg-blue-600 transition inline-flex items-center justify-center gap-2"
+                >
+                  <Plus size={18} />
+                  Add Featured Work
+                </button>
               </div>
             </div>
 

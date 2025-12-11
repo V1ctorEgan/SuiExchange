@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Camera, X, Save, LogOut } from 'lucide-react'
 import nft3 from '../../assets/nft3.jpg'
+import useStore from '../../store/useStore'
 
 export default function Settings() {
   const [username, setUsername] = useState('your_username')
@@ -15,32 +16,22 @@ export default function Settings() {
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const url = URL.createObjectURL(file)
-    setAvatarPreview(url)
+    const reader = new FileReader()
+    reader.onload = () => setAvatarPreview(reader.result)
+    reader.readAsDataURL(file)
   }
 
   const handleSave = () => {
-    console.log({
-      username,
-      bio,
-      showOnline,
-      allowMessages,
-      newMessages,
-      walletActivity,
-      marketUpdates,
-    })
+    // persist settings and user profile to global store
+    useStore.getState().setSettings({ showOnline, allowMessages, newMessages, walletActivity, marketUpdates })
+    useStore.getState().setUser({ username, bio, avatar: avatarPreview })
     alert('Settings saved!')
   }
 
   const handleLogout = () => {
-    // Clear localStorage
-    localStorage.removeItem('user_avatar')
-    localStorage.removeItem('user_username')
-    localStorage.removeItem('user_role')
-    localStorage.removeItem('user_stack')
-    localStorage.removeItem('profile_offerType')
-    localStorage.removeItem('profile_offerPrice')
-    // Redirect to landing page
+    // Clear global store (user + profiles)
+    useStore.getState().clearUser()
+    // Optionally clear profiles/services if desired (not doing here)
     window.location.href = '/'
   }
 
