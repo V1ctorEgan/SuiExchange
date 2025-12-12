@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Vote, Wallet, ContactIcon, NotebookIcon, WorkflowIcon } from 'lucide-react';
+import { Vote, Wallet, Lock, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Lock, LogOut } from 'lucide-react'
 
 // import WalletConnectModal from './WalletConnectModal'
 import {
@@ -18,6 +17,7 @@ export default function Navbar(){
   const { connected, account } = useWallet()
   const [open, setOpen] = useState(false)
   const [hasNavigated, setHasNavigated] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
   
   useEffect(() => {
     if (connected && !hasNavigated) {
@@ -25,6 +25,15 @@ export default function Navbar(){
       navigate('/onboarding/role')
     }
   }, [connected, hasNavigated, navigate])
+  
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640)
+    }
+    handleResize() // Call once on mount
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
   
   return (
     <header className="w-full sticky top-0 z-50 bg-linear-to-b from-black/40 to-transparent backdrop-blur px-4 py-3 ">
@@ -34,7 +43,7 @@ export default function Navbar(){
           <div>Exchange</div>
         </Link>
 
-        <nav className="flex items-center  gap-4">
+        <nav className="flex items-center gap-4">
           {connected && account?.address ? (
             <motion.div
               whileHover={{ scale: 1.03 }}
@@ -47,7 +56,7 @@ export default function Navbar(){
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
             </motion.div>
           ) : (
-            <ConnectButton className="mx-auto" />
+            <ConnectButton style={isMobile ? { width: 100 } : {}} />
           )}
         </nav>
       </div>
