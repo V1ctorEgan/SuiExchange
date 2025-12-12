@@ -56,7 +56,7 @@ export default function Navbar(){
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
             </motion.div>
           ) : (
-            <ConnectButton style={isMobile ? { width: 100 } : {}} />
+            <ConnectButton style={isMobile ? { width: 100, fontSize:12, height:45,  textAlign:"center", padding:4 } : {}} />
           )}
         </nav>
       </div>
