@@ -21,7 +21,8 @@ export default function ProfileInfo() {
   const store = useStore()
   const persisted = talentId ? store.getProfileById(talentId) : null
 
-  const talentData = persisted || {
+  // Default talent data with proper fallbacks
+  const defaultTalent = {
     id: talentId || 1,
     name: 'Alice Johnson',
     rating: 5.0,
@@ -42,6 +43,20 @@ export default function ProfileInfo() {
       { name: 'Twitter', url: 'https://twitter.com', icon: '𝕏' },
     ],
   }
+
+  // Merge persisted data with defaults, ensuring critical fields exist
+  const talentData = persisted ? {
+    ...defaultTalent,
+    ...persisted,
+    price: persisted.price ?? defaultTalent.price, // Ensure price is never undefined
+    rating: persisted.rating ?? defaultTalent.rating,
+    reviews: persisted.reviews ?? defaultTalent.reviews,
+    likes: persisted.likes ?? defaultTalent.likes,
+    bio: persisted.bio ?? defaultTalent.bio,
+    skills: persisted.skills ?? defaultTalent.skills,
+    featured: persisted.featured ?? defaultTalent.featured,
+    socials: persisted.socials ?? defaultTalent.socials,
+  } : defaultTalent
 
   const handleHire = () => {
     // Navigate to hiring flow or show modal
@@ -127,10 +142,12 @@ export default function ProfileInfo() {
                 <span className="text-slate-600 text-sm">({talentData.reviews} reviews)</span>
               </div>
 
-              {/* Rate */}
+              {/* Rate - FIXED: Added safety check for price */}
               <div className="mb-6">
                 <p className="text-slate-600 text-sm mb-2">Hourly Rate</p>
-                <p className="text-3xl font-bold text-blue-600">${talentData.price}/hr</p>
+                <p className="text-3xl font-bold text-blue-600">
+                  ${typeof talentData.price === 'number' ? talentData.price.toFixed(0) : '150'}/hr
+                </p>
               </div>
 
               {/* Bio */}

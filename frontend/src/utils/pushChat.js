@@ -13,12 +13,6 @@ let messageStream = null;
 // INITIALIZATION
 // ============================================================================
 
-/**
- * Initialize Push Protocol with user's wallet
- * Call this once when user connects wallet
- * @param {Object} suiSigner - Sui wallet signer
- * @returns {Promise<PushAPI>} Initialized Push user
- */
 export async function initializePush(suiSigner) {
   try {
     if (pushUser) {
