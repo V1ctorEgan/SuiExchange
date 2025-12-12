@@ -86,7 +86,7 @@ export default function ProblemStack(){
   }
 
   return (
-    <section className="relative w-full py-24 bg-linear-to-b from-white to-brand-50">
+    <section className="relative w-full py-24 bg-linear-to-b from-white to-brand-50 select-none">
       <div className=" mx-auto px-2 lg:px-4 space-y-6">
            <h2 className="text-4xl font-bold text-center text-slate-900 mb-4">
           What You Can Do

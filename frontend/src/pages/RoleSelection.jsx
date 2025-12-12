@@ -8,7 +8,7 @@ export default function RoleSelection() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen  flex items-center justify-center p-4">
+    <div className="min-h-screen  flex items-center justify-center p-4 select-none">
       
       <div className="max-w-4xl w-full">
         <div className="text-center mb-12">

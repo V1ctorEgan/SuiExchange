@@ -17,7 +17,7 @@ export default function Portfolio() {
   const [socialUrl, setSocialUrl] = useState('')
   const [avatarPreview, setAvatarPreview] = useState(nft3)
   const [offerType, setOfferType] = useState('hire')
-  const [offerPrice, setOfferPrice] = useState('150')
+  const [offerPrice, setOfferPrice] = useState('10')
   const navigate = useNavigate()
   const store = useStore()
   const [uploadLoading, setUploadLoading] = useState(false)
@@ -145,7 +145,7 @@ export default function Portfolio() {
   
 
   const renderTopbar = () => (
-    <div className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+    <div className="bg-white border-b select-none border-slate-200 px-6 py-4 flex items-center justify-between">
       <div className="flex items-center gap-8 flex-1">
         <h2 className="text-blue-500 text-xl font-semibold">Portfolio</h2>
         <div className="flex-1 max-w-md">

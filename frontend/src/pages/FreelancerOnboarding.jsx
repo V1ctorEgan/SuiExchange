@@ -181,7 +181,7 @@ export default function FreelancerOnboarding() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 py-8">
+    <div className="min-h-screen flex items-center justify-center p-4 py-8 select-none">
       <div className="w-full max-w-2xl">
         <button
           onClick={() => navigate('/onboarding/role')}

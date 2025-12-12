@@ -68,7 +68,7 @@ export default function Howitworks() {
   };
 
   return (
-    <section className="w-full pt-10 pb-20 bg-linear-to-b from-slate-50 to-blue-50">
+    <section className="w-full pt-10 pb-20 bg-linear-to-b from-slate-50 to-blue-50 select-none">
       <div className="lg:max-w-5xl mx-auto lg:px-6 px-3">
 
         <h2 className="text-3xl md:text-4xl font-bold text-center text-slate-900 mb-3">

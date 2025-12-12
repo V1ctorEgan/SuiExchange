@@ -19,7 +19,7 @@ export default function App(){
     navigate('/onboarding/role')
   }
   return (
-    <div className="pt-10 lg:pt-0">
+    <div className="pt-10 lg:pt-0 select-none">
       <main className="mx-auto px-2 sm:px-4 md:px-6  h-screen">
         <section className="relative overflow-hidden text-white px-2 sm:px-4">
           {/* <ImageCarousel> */}

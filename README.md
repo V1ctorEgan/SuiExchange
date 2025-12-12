@@ -230,5 +230,5 @@ Open issues, submit pull requests, or suggest features.
 MIT License.
 [promote garden sound favorite priority force achieve vacuum rice style upset extra]
 
-[View on Walrus](https://walrus.tusky.io/fj9YK-DEy2oCrB0-AyRMRfgZq8dXmpAtJzdtgQIqLBA)
+
 ```

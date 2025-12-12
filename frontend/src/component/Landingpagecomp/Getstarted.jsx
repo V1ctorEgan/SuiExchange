@@ -93,7 +93,7 @@ export default function Getstarted() {
             whileTap={{ scale: 0.95 }}
             className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-10 rounded-xl shadow-lg transition-all"
           >
-            Connect Wallet & Start Trading
+            Explore Marketplace
           </motion.button>
         </div>
       </motion.div>

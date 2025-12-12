@@ -132,7 +132,7 @@ export default function Marketplace() {
   const filteredListings = searchListings(filteredByCategory, searchTerm)
 
   const renderTopbar = () => (
-    <div className="bg-white border-b border-slate-200 px-3 sm:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+    <div className="bg-white border-b border-slate-200 px-3 sm:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 select-none">
       <div className="flex items-center gap-3 sm:gap-8 flex-1 justify-between w-full">
         <h2 className="text-blue-500 font-semibold text-sm sm:text-base hidden lg:block">Marketplace</h2>
         <div className="flex-1 max-w-md">
@@ -167,7 +167,7 @@ export default function Marketplace() {
       {renderTopbar()}
       <div className="flex-1 overflow-auto lg:pb-0 pb-15">
         <div className="px-3 sm:px-6 md:px-8 py-6 sm:py-12 text-black">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 select-none">
             Find the Top <span className='text-blue-400'>Web3 talent</span>
           </h1>
           <p className="text-sm sm:text-base text-black/60 mb-6">
@@ -218,7 +218,7 @@ export default function Marketplace() {
                           className="w-12 h-12 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                        <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
                           {talent.image}
                         </div>
                       )}
