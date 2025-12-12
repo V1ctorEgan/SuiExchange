@@ -7,7 +7,7 @@ import Marketplace from "../pages/dashboard/Marketplace";
 import Messages from "../pages/dashboard/Messages";
 import Portfolio from "../pages/dashboard/Portfolio";
 import Settings from "../pages/dashboard/Settings";
-import Edit from "../pages/dashboard/Edit";
+import Edit from "../pages/dashboard/edit";
 import ProfileInfo from "../pages/dashboard/ProfileInfo";
 import RoleSelection from "../pages/RoleSelection";
 import ClientOnboarding from "../pages/ClientOnboarding";
